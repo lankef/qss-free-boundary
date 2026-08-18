@@ -97,3 +97,8 @@ Fixed pressure profile error:                                0.000e+00  -->   0.
 Fixed iota profile error:                                    0.000e+00  -->   0.000e+00 (dimensionless)
 ==============================================================================================================
 
+Pre-optimization QS value: 1.475778581192871e-25
+Pre-optimization quadcoil value: 627305431.2991728
+Post-optimization QS value: 994952.3908898493
+Post-optimization quadcoil value: 546374045.7860159
+End time:       Tue Aug 18 10:25:36 EDT 2026
