@@ -1,37 +1,13 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[51]:
-
-
 import sys
 import os
 import time
+import pickle
 
 sys.path.insert(0, os.path.abspath("."))
 sys.path.append(os.path.abspath("../../../"))
 
-
-# If you have access to a GPU, uncomment the following two lines before any DESC or JAX related imports. You should see about an order of magnitude speed improvement with only these two lines of code!
-
-# In[2]:
-
-
 from desc import set_device
 set_device("gpu")
-
-
-# In[3]:
-
-
-# import jax
-# jax.config.update("jax_compilation_cache_dir", "../jax-caches")
-# jax.config.update("jax_persistent_cache_min_entry_size_bytes", -1)
-# jax.config.update("jax_persistent_cache_min_compile_time_secs", 0)
-
-
-# In[56]:
-
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -263,7 +239,6 @@ def quasi_single_stage(
             vacuum=vacuum,
             # WARNING: If changing this impacts the sln, then the unit 
             # generators may not be working!!!
-            weight=quadcoil_weight,
             metric_name=('f_B',),
             metric_target=np.array([0.,]),
             metric_weight=np.array([quadcoil_weight/f_B(qp_nescoil, dofs_nescoil),]),
