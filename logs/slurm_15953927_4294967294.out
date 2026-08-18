@@ -1,0 +1,23 @@
+Job ID:         15953927
+Nodes:          1
+CPUs per task:  4
+Start time:     Tue Aug 18 10:17:26 EDT 2026
+Precomputing transforms
+Precomputing transforms
+Boundary mode steps: range(3, 7)
+Precomputing transforms
+Precomputing transforms
+
+==================================
+Optimizing boundary modes M,N <= 3
+====================================
+Building objective: volume
+Precomputing transforms
+Timer: Precomputing transforms = 29.4 ms
+Timer: Objective build = 610 ms
+Building objective: force
+Precomputing transforms
+Timer: Precomputing transforms = 918 ms
+Timer: Objective build = 987 ms
+Timer: Objective build = 1.42 ms
+Timer: Eq Update LinearConstraintProjection build = 3.56 sec
