@@ -22,6 +22,7 @@ echo "Nodes:          $SLURM_JOB_NUM_NODES"
 echo "CPUs per task:  $SLURM_CPUS_PER_TASK"
 echo "Start time:     $(date)"
 conda activate desc
+mkdir -p data_fixed
 python -u ./fixed.py 
 
 echo "End time:       $(date)"

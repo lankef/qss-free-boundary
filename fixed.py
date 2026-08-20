@@ -2,7 +2,7 @@ import sys
 import os
 import time
 import pickle
-
+from pprint import pformat
 sys.path.insert(0, os.path.abspath("."))
 sys.path.append(os.path.abspath("../../../"))
 
@@ -27,7 +27,7 @@ from desc.objectives import (
     QuadcoilProxy,
     QuadraticFlux,
     BoundaryError,
-    VacuumBoundaryError,
+    RotationalTransform, 
     SurfaceCurrentRegularization,
     QuasisymmetryTripleProduct,
     Volume,
@@ -46,8 +46,10 @@ from desc.vmec import VMECIO
 # Quadcoil import 
 from quadcoil.quantity import f_B, Phi_with_net_current, Phi
 
-qa_eq = desc.examples.get("ARIES-CS")
-qa_eq.change_resolution(L=6, M=6, N=6)
+qa_eq = desc.examples.get("reactor_QA")
+qa_eq.change_resolution(L=8, M=8, N=8)
+qa_eq.current = PowerSeriesProfile() 
+qa_eq, info = qa_eq.solve(verbose=3, copy=False)
 B2_self_target = 20.**2
 vacuum = True
 
@@ -58,15 +60,16 @@ ntor = 8  # Num. toroidal modes for the current potential
 # Integration in quadcoil is naively performed using summation
 # so we recommend at least 16 here.
 # This corresponds to a (33 x 33) grid.
-plasma_coil_distance = 1.3
-coil_coil_distance = 0.77  # 1.10 is the Wiedman value
-coil_per_half_fp = 3  # 3 is the Wiedman value
-curvature_target = 0.88  # 0.88 is the Wiedman value
+plasma_coil_distance = 1.3 # 1.3
+# coil_coil_distance = 0.77  # 1.10 is the Wiedman value
+# coil_per_half_fp = 3  # 3 is the Wiedman value
+# curvature_target = 0.88  # 0.88 is the Wiedman value
 # f_B_target_norm = 1e-4
 # radius_of_curvature = 0.5 # 0.5m is the infinity two value
 # Resolution for sampling objectives
 quadpoints_phi = jnp.linspace(0, 1 / qa_eq.NFP, 32, endpoint=False)
 quadpoints_theta = jnp.linspace(0, 1, 32, endpoint=False)
+qs_multiple = 10
 
 
 # In[9]:
@@ -143,8 +146,9 @@ def quasi_single_stage(
     quadcoil_kwargs_obj,
     quadcoil_weight=0.0,
     vol_weight=0.0,
+    iota_weight=0.0,
     qs_weight=1.0,
-    maxiter=30,  # Maximum iteration per Fourier continuation
+    maxiter=500,  # Maximum iteration per Fourier continuation
     step=1,
     max_k=None,  # Maximum continuation boundary mode number
     printout=False,  # Whether to run dummy optimization even when data exists for printout.
@@ -166,8 +170,16 @@ def quasi_single_stage(
     qs_bound = jnp.abs(
         qs_objective_init.compute(*qs_objective_init.xs(init_eq))
         / qs_objective_init.normalization
+    ) * qs_multiple
+    iotagridaxis = LinearGrid(
+        M=init_eq.M_grid, N=init_eq.N_grid, NFP=init_eq.NFP, rho=np.array([0.01]), sym=True
     )
-
+    iotagridedge = LinearGrid(
+        M=init_eq.M_grid, N=init_eq.N_grid, NFP=init_eq.NFP, rho=np.array([1.0]), sym=True
+    )
+    iota_axis = init_eq.compute(['iota'], grid=iotagridaxis)['iota'][0]
+    iota_edge = init_eq.compute(['iota'], grid=iotagridedge)['iota'][0]
+    
     out_list = []
 
     # ----- Fourier continuation -----
@@ -200,6 +212,20 @@ def quasi_single_stage(
                 target=vol,
                 weight=vol_weight,
             ),
+            # Axis rotational transform
+            RotationalTransform(
+                eq=init_eq_k,
+                target=iota_axis,
+                weight=iota_weight,
+                grid=iotagridaxis,
+            ),
+            # Edge rotational transform
+            RotationalTransform(
+                eq=init_eq_k,
+                target=iota_edge,
+                weight=iota_weight,
+                grid=iotagridedge,
+            ),
             qs_objective,
         ]
         #  ----- Constraints -----
@@ -224,10 +250,11 @@ def quasi_single_stage(
             FixBoundaryR(eq=init_eq_k, modes=R_modes),
             FixBoundaryZ(eq=init_eq_k, modes=Z_modes),
             FixPsi(init_eq_k),
-            FixPressure(init_eq_k),
+            FixCurrent(init_eq_k),
+            # FixPressure(init_eq_k),
             # Equilibrium is now loaded with fixed iota because we don't
             # care about enforcing vacuum field any more.
-            FixIota(init_eq_k),
+            # FixIota(init_eq_k),
         ]
         # QS objective
         # Mostly used in quasi-single-stage but also
@@ -339,6 +366,7 @@ def quasi_single_stage(
 quadcoil_weight = 10. # 5. # 50. -> 90% improvement, 10x degradation in QS
 qs_weight = 5000. # 5000.
 vol_weight = 30.
+iota_weight = 30.
 
 
 # In[80]:
@@ -347,7 +375,7 @@ vol_weight = 30.
 data_dir = 'data_fixed' 
 plot_dir = 'plots'
 init_eq = qa_eq.copy()
-init_eq.iota = init_eq.get_profile("iota")
+# init_eq.iota = init_eq.get_profile("iota")
 
 eqfam_f_max_phi, out_list_f_max_phi, quadcoil_objective_f_max_phi = quasi_single_stage(
     init_eq=init_eq, 
@@ -356,6 +384,7 @@ eqfam_f_max_phi, out_list_f_max_phi, quadcoil_objective_f_max_phi = quasi_single
     quadcoil_weight=quadcoil_weight,
     qs_weight=qs_weight,
     vol_weight=vol_weight,
+    iota_weight=iota_weight,
     printout=True
 )
 
