@@ -1,0 +1,8 @@
+/scratch/lf2869/code/DESC/desc/__init__.py:94: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  from pynvml import (
+/scratch/lf2869/code/quadcoil/src/quadcoil/wrapper.py:37: UserWarning: Bnormal_plasma provided, inputs for plasma_quadpoints_phi and plasma_quadpoints_theta will be ignored.
+  warnings.warn(
+/scratch/lf2869/code/quadcoil/src/quadcoil/wrapper.py:37: UserWarning: Bnormal_plasma provided, inputs for plasma_quadpoints_phi and plasma_quadpoints_theta will be ignored.
+  warnings.warn(
+/scratch/lf2869/code/quadcoil/src/quadcoil/wrapper.py:37: UserWarning: Bnormal_plasma provided, inputs for plasma_quadpoints_phi and plasma_quadpoints_theta will be ignored.
+  warnings.warn(
