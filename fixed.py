@@ -11,11 +11,9 @@ iota_weight = 30.
 
 data_dir = 'data_fixed'
 plot_dir = 'plots'
-init_eq = qa_eq.copy()
-# init_eq.iota = init_eq.get_profile("iota")
 
 eqfam_f_max_phi, out_list_f_max_phi, quadcoil_objective_f_max_phi = quasi_single_stage(
-    init_eq=init_eq,
+    eq=eq_init,
     file_name=data_dir + '/' + 'f_max_B2',
     quadcoil_kwargs_obj=quadcoil_kwargs,
     objective_mode="fixed",

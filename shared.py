@@ -129,12 +129,11 @@ nescoil_objective = QuadcoilProxy(
     # field=[],
 )
 nescoil_objective.build()
-f_B_nescoil = f_B(qp_nescoil, dofs_nescoil)
 # Solving the NESCOIL problem
 out_dict_nescoil, qp_nescoil, dofs_nescoil, status_nescoil = \
     nescoil_objective.solve_quadcoil(*nescoil_objective.xs(eq_init))
-
-
+# Calculating a reference f_B
+f_B_nescoil = f_B(qp_nescoil, dofs_nescoil)
 # Defining problem
 quadcoil_kwargs = quadcoil_kwargs_basic | {
     "objective_name": "f_B",
@@ -151,7 +150,7 @@ quadcoil_kwargs = quadcoil_kwargs_basic | {
 # ----- QSS routine -----
 
 def quasi_single_stage(
-    init_eq,
+    eq,
     file_name,
     quadcoil_kwargs_obj,
     objective_mode="free",  # "free" -> QuadcoilFreeBoundaryError, "fixed" -> QuadcoilProxy
@@ -167,28 +166,29 @@ def quasi_single_stage(
 
     # ----- Initializing objects and grids -----
     
-    eqfam = EquilibriaFamily(init_eq)
+    eqfam = EquilibriaFamily(eq)
     iotagridaxis = LinearGrid(
-        M=init_eq.M_grid, N=init_eq.N_grid, NFP=init_eq.NFP, rho=np.array([0.01]), sym=True
+        M=eq.M_grid, N=eq.N_grid, NFP=eq.NFP, rho=np.array([0.01]), sym=True
     )
     iotagridedge = LinearGrid(
-        M=init_eq.M_grid, N=init_eq.N_grid, NFP=init_eq.NFP, rho=np.array([1.0]), sym=True
+        M=eq.M_grid, N=eq.N_grid, NFP=eq.NFP, rho=np.array([1.0]), sym=True
     )
     out_list = []
 
     # ----- Fourier continuation -----
     
     if not max_k:
-        max_k = init_eq.M + 1
+        max_k = eq.M + 1
     else:
-        max_k = min(max_k, init_eq.M + 1)
-    k_list = range(3, init_eq.M + 1, step)
+        max_k = min(max_k, eq.M + 1)
+    k_list = range(3, eq.M + 1, step)
     print("Boundary mode steps:", k_list)
 
     # ----- QSS loop -----
     
     for i in range(len(k_list)):
         k = k_list[i]
+        eq_k = eqfam[-1].copy()
         filename_eq = file_name + "_eq_" + str(k) + ".h5"
         filename_qf = file_name + "_qf_" + str(k) + ".h5"
         filename_time = file_name + "_time_" + str(k) + ".npy"
@@ -203,29 +203,29 @@ def quasi_single_stage(
         R_modes = np.vstack(
             (
                 [0, 0, 0],
-                init_eq.surface.R_basis.modes[
-                    np.max(np.abs(init_eq.surface.R_basis.modes), 1) > k, :
+                eq.surface.R_basis.modes[
+                    np.max(np.abs(eq.surface.R_basis.modes), 1) > k, :
                 ],
             )
         )
-        Z_modes = init_eq.surface.Z_basis.modes[
-            np.max(np.abs(init_eq.surface.Z_basis.modes), 1) > k, :
+        Z_modes = eq.surface.Z_basis.modes[
+            np.max(np.abs(eq.surface.Z_basis.modes), 1) > k, :
         ]
         # next we create the constraints, using the mode number arrays just created
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
         constraints_base = [
-            ForceBalance(eq=init_eq_k),
-            FixBoundaryR(eq=init_eq_k, modes=R_modes),
-            FixBoundaryZ(eq=init_eq_k, modes=Z_modes),
-            # FixPsi(init_eq_k),
-            FixCurrent(init_eq_k),
+            ForceBalance(eq=eq_k),
+            FixBoundaryR(eq=eq_k, modes=R_modes),
+            FixBoundaryZ(eq=eq_k, modes=Z_modes),
+            # FixPsi(eq_k),
+            FixCurrent(eq_k),
         ]
         
         # ----- Objectives -----
         
-        init_eq_k = eqfam[-1].copy()
+        eq_k = eqfam[-1].copy()
         qs_objective = QuasisymmetryTwoTerm(
-            eq=init_eq_k,
+            eq=eq_k,
             bounds=(-qs_bound, qs_bound),
             normalize_target=False,
             weight=qs_weight,
@@ -233,23 +233,23 @@ def quasi_single_stage(
         qs_objective.build()
         obj_list_base = [
             Volume(
-                eq=init_eq_k,
-                bound=(vol_l, vol_u)
+                eq=eq_k,
+                bounds=(vol_l, vol_u),
                 normalize_target=False,
                 weight=vol_weight,
             ),
             # Axis rotational transform
             RotationalTransform(
-                eq=init_eq_k,
-                bound=(iota_l, iota_u)
+                eq=eq_k,
+                bounds=(iota_l, iota_u),
                 normalize_target=False,
                 weight=iota_weight,
                 grid=iotagridaxis,
             ),
             # Edge rotational transform
             RotationalTransform(
-                eq=init_eq_k,
-                bound=(iota_l, iota_u)
+                eq=eq_k,
+                bounds=(iota_l, iota_u),
                 normalize_target=False,
                 weight=iota_weight,
                 grid=iotagridedge,
@@ -261,7 +261,7 @@ def quasi_single_stage(
         # used to get single-stage init guess
         if objective_mode == "free":
             quadcoil_fbe = QuadcoilFreeBoundaryError(
-                eq=init_eq_k,
+                eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs,
                 enable_net_current_plasma=True,
                 vacuum=vacuum,
@@ -271,7 +271,7 @@ def quasi_single_stage(
             )
         elif objective_mode == "fixed":
             quadcoil_fbe = QuadcoilProxy(
-                eq=init_eq_k,
+                eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs,
                 enable_net_current_plasma=True,
                 vacuum=vacuum,
@@ -299,7 +299,7 @@ def quasi_single_stage(
                 print("====================================")
                 time1 = time.time()
                 optimizer = Optimizer("proximal-lsq-auglag")
-                eq_new, out = init_eq_k.optimize(
+                eq_new, out = eq_k.optimize(
                     objective=objective,
                     constraints=constraints,
                     optimizer=optimizer,
@@ -309,9 +309,9 @@ def quasi_single_stage(
                     copy=True,
                 )
                 # Printing continuation stage result
-                qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(init_eq_k))
+                qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
                 quadcoil_fbe1 = quadcoil_fbe.compute_scalar(
-                    *quadcoil_fbe.xs(init_eq_k)
+                    *quadcoil_fbe.xs(eq_k)
                 )
                 qs_objective2 = qs_objective.compute_scalar(*qs_objective.xs(eq_new))
                 quadcoil_fbe2 = quadcoil_fbe.compute_scalar(
@@ -347,7 +347,7 @@ def quasi_single_stage(
                 if printout and i == len(k_list) - 1:
                     print("Still running a dummy optimization to print out stuff.")
                     optimizer = Optimizer("proximal-lsq-auglag")
-                    eq_new, out = init_eq_k.optimize(
+                    eq_new, out = eq_k.optimize(
                         objective=objective,
                         constraints=constraints,
                         optimizer=optimizer,
