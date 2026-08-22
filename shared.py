@@ -136,6 +136,8 @@ qs_bound = 1e-4 # Helios boozer error is between 2.1e-3 and 5.8e-3
 # Bounds for iota
 iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
+optimizer_name = "proximal-lsq-auglag" # "proximal-lsq-auglag"
+jac_chunk_size = 32 
 
 # ----- Quadcoil Resolution -----
 
@@ -339,7 +341,7 @@ def quasi_single_stage(
         # next we create the constraints, using the mode number arrays just created
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
         constraints = [
-            ForceBalance(eq=eq_k),
+            ForceBalance(eq=eq_k, jac_chunk_size=jac_chunk_size),
             FixBoundaryR(eq=eq_k, modes=R_modes),
             FixBoundaryZ(eq=eq_k, modes=Z_modes),
             # FixPsi(eq_k),
@@ -365,7 +367,7 @@ def quasi_single_stage(
                 
                 mem('*******     starting step: '+str(k))
                 time1 = time.time()
-                optimizer = Optimizer("proximal-lsq-auglag")
+                optimizer = Optimizer(optimizer_name)
                 eq_new, out = eq_k.optimize(
                     objective=objective,
                     constraints=constraints,
@@ -415,7 +417,7 @@ def quasi_single_stage(
                 print("Step", k, "exists.")
                 if printout and i == len(k_list) - 1:
                     print("Still running a dummy optimization to print out stuff.")
-                    optimizer = Optimizer("proximal-lsq-auglag")
+                    optimizer = Optimizer(optimizer_name)
                     eq_new, out = eq_k.optimize(
                         objective=objective,
                         constraints=constraints,
