@@ -51,6 +51,63 @@ from desc.profiles import PowerSeriesProfile
 from desc.vmec import VMECIO
 from quadcoil.quantity import f_B, Phi_with_net_current, Phi
 
+
+import jax
+
+# ----- memory instrumentation -----
+
+_DEV = jax.devices()[0]
+_GiB = float(2 ** 30)
+_HISTORY = []
+
+# Important: This (along with the nvidia-smi call)
+# views the pool size, peak use and largest memory 
+# allocation request! It seems that most of the memory
+# are used by one big request. 
+def mem(tag):
+    """Print JAX allocator stats. Safe to call anywhere."""
+    try:
+        s = _DEV.memory_stats() or {}
+    except Exception as e:                      # CPU backend, or unsupported
+        print(f"[mem:{tag}] memory_stats unavailable: {e}", flush=True)
+        return
+    rec = {
+        'tag': tag,
+        'in_use': s.get('bytes_in_use', 0) / _GiB,
+        # bytes currently handed out by the BFC allocator and not yet freed
+        # i.e. your live JAX arrays at the moment you call memory_stats().
+        'peak': s.get('peak_bytes_in_use', 0) / _GiB, 
+        'pool': s.get('pool_bytes', 0) / _GiB,
+        'largest': s.get('largest_alloc_size', 0) / _GiB,
+        'num_allocs': s.get('num_allocs', 0),
+    }
+    _HISTORY.append(rec)
+    print(
+        f"[mem:{tag:>16}] in_use={rec['in_use']:7.3f} GiB  "
+        f"peak={rec['peak']:7.3f} GiB  pool={rec['pool']:7.3f} GiB  "
+        f"largest={rec['largest']:7.3f} GiB  n_alloc={rec['num_allocs']}",
+        flush=True,
+    )
+
+
+def mem_summary():
+    if not _HISTORY:
+        return
+    print("\n===== JAX memory summary =====", flush=True)
+    print(f"{'stage':>18}  {'in_use(GiB)':>11}  {'peak(GiB)':>10}", flush=True)
+    for r in _HISTORY:
+        print(f"{r['tag']:>18}  {r['in_use']:11.3f}  {r['peak']:10.3f}", flush=True)
+    print(f"\nJAX peak_bytes_in_use = {_HISTORY[-1]['peak']:.3f} GiB", flush=True)
+    print("Compare against the max of mem_<jobid>.csv; the difference is "
+          "non-JAX memory (cuDSS workspace, PETSc, CUDA context).", flush=True)
+
+
+
+
+
+mem('*******     start')
+
+
 # Creating toroidal initial state
 vacuum = True
 surf = FourierRZToroidalSurface(
@@ -61,7 +118,7 @@ surf = FourierRZToroidalSurface(
     NFP=2,
 )
 eq_init = Equilibrium(
-    M=16, N=16, # Psi=1.0, 
+    L=16, M=16, N=16, # Psi=1.0, 
     surface=surf, 
     current=PowerSeriesProfile(),
     # pressure=pres, iota=iota
@@ -147,6 +204,8 @@ quadcoil_kwargs = quadcoil_kwargs_basic | {
     "phi_init_with_nescoil": False,
 }
 
+mem('*******     nescoil')
+
 # ----- QSS routine -----
 
 def quasi_single_stage(
@@ -166,6 +225,7 @@ def quasi_single_stage(
 
     # ----- Initializing objects and grids -----
     
+
     eqfam = EquilibriaFamily(eq)
     iotagridaxis = LinearGrid(
         M=eq.M_grid, N=eq.N_grid, NFP=eq.NFP, rho=np.array([0.01]), sym=True
@@ -175,6 +235,9 @@ def quasi_single_stage(
     )
     out_list = []
 
+    
+    mem('*******     eqfam')
+    
     # ----- Fourier continuation -----
     
     if not max_k:
@@ -186,15 +249,79 @@ def quasi_single_stage(
 
     # ----- QSS loop -----
     
+    # ----- Objectives -----
+    
+    qs_objective = QuasisymmetryTwoTerm(
+        eq=eq,
+        bounds=(-qs_bound, qs_bound),
+        normalize_target=False,
+        weight=qs_weight,
+    )
+    qs_objective.build()
+    obj_list_base = [
+        Volume(
+            eq=eq,
+            bounds=(vol_l, vol_u),
+            normalize_target=False,
+            weight=vol_weight,
+        ),
+        # Axis rotational transform
+        RotationalTransform(
+            eq=eq,
+            bounds=(iota_l, iota_u),
+            normalize_target=False,
+            weight=iota_weight,
+            grid=iotagridaxis,
+        ),
+        # Edge rotational transform
+        RotationalTransform(
+            eq=eq,
+            bounds=(iota_l, iota_u),
+            normalize_target=False,
+            weight=iota_weight,
+            grid=iotagridedge,
+        ),
+        qs_objective,
+    ]
+    # QS objective
+    # Mostly used in quasi-single-stage but also
+    # used to get single-stage init guess
+    if objective_mode == "free":
+        quadcoil_fbe = QuadcoilFreeBoundaryError(
+            eq=eq,
+            quadcoil_kwargs=quadcoil_kwargs,
+            enable_net_current_plasma=True,
+            vacuum=vacuum,
+            normalize=True,
+            normalize_target=False,
+            weight=quadcoil_weight,
+        )
+    elif objective_mode == "fixed":
+        quadcoil_fbe = QuadcoilProxy(
+            eq=eq,
+            quadcoil_kwargs=quadcoil_kwargs,
+            enable_net_current_plasma=True,
+            vacuum=vacuum,
+            metric_name=('f_B',),
+            metric_target=np.array([0.,]),
+            metric_weight=np.array([quadcoil_weight/f_B_nescoil,]),
+            normalize=False,
+            normalize_target=False,
+            eq_fixed=False,  # Whether the equilibrium are fixed
+        )
+    else:
+        raise ValueError(
+            "objective_mode must be 'free' or 'fixed', got: "
+            + repr(objective_mode)
+        )
+    quadcoil_fbe.build()
+    objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe])
+    
+    mem('*******     objectives and constraints built')
+
     for i in range(len(k_list)):
         k = k_list[i]
         eq_k = eqfam[-1].copy()
-        filename_eq = file_name + "_eq_" + str(k) + ".h5"
-        filename_qf = file_name + "_qf_" + str(k) + ".h5"
-        filename_time = file_name + "_time_" + str(k) + ".npy"
-        filename_history = file_name + "_history_" + str(k) + ".pickle"
-        filename_log = file_name + "_log_" + str(k) + ".txt"
-        
         #  ----- Constraints -----
         
         # as opposed to SIMSOPT and STELLOPT where variables are assumed fixed, in DESC
@@ -214,89 +341,30 @@ def quasi_single_stage(
         # next we create the constraints, using the mode number arrays just created
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
         constraints_base = [
-            ForceBalance(eq=eq_k),
-            FixBoundaryR(eq=eq_k, modes=R_modes),
-            FixBoundaryZ(eq=eq_k, modes=Z_modes),
-            # FixPsi(eq_k),
-            FixCurrent(eq_k),
+            ForceBalance(eq=eq),
+            FixBoundaryR(eq=eq, modes=R_modes),
+            FixBoundaryZ(eq=eq, modes=Z_modes),
+            # FixPsi(eq),
+            FixCurrent(eq),
         ]
-        
-        # ----- Objectives -----
-        
-        eq_k = eqfam[-1].copy()
-        qs_objective = QuasisymmetryTwoTerm(
-            eq=eq_k,
-            bounds=(-qs_bound, qs_bound),
-            normalize_target=False,
-            weight=qs_weight,
-        )
-        qs_objective.build()
-        obj_list_base = [
-            Volume(
-                eq=eq_k,
-                bounds=(vol_l, vol_u),
-                normalize_target=False,
-                weight=vol_weight,
-            ),
-            # Axis rotational transform
-            RotationalTransform(
-                eq=eq_k,
-                bounds=(iota_l, iota_u),
-                normalize_target=False,
-                weight=iota_weight,
-                grid=iotagridaxis,
-            ),
-            # Edge rotational transform
-            RotationalTransform(
-                eq=eq_k,
-                bounds=(iota_l, iota_u),
-                normalize_target=False,
-                weight=iota_weight,
-                grid=iotagridedge,
-            ),
-            qs_objective,
-        ]
-        # QS objective
-        # Mostly used in quasi-single-stage but also
-        # used to get single-stage init guess
-        if objective_mode == "free":
-            quadcoil_fbe = QuadcoilFreeBoundaryError(
-                eq=eq_k,
-                quadcoil_kwargs=quadcoil_kwargs,
-                enable_net_current_plasma=True,
-                vacuum=vacuum,
-                normalize=True,
-                normalize_target=False,
-                weight=quadcoil_weight,
-            )
-        elif objective_mode == "fixed":
-            quadcoil_fbe = QuadcoilProxy(
-                eq=eq_k,
-                quadcoil_kwargs=quadcoil_kwargs,
-                enable_net_current_plasma=True,
-                vacuum=vacuum,
-                metric_name=('f_B',),
-                metric_target=np.array([0.,]),
-                metric_weight=np.array([quadcoil_weight/f_B_nescoil,]),
-                normalize=False,
-                normalize_target=False,
-                eq_fixed=False,  # Whether the equilibrium are fixed
-            )
-        else:
-            raise ValueError(
-                "objective_mode must be 'free' or 'fixed', got: "
-                + repr(objective_mode)
-            )
-        quadcoil_fbe.build()
-        objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe])
         constraints = constraints_base
+        
+        filename_eq = file_name + "_eq_" + str(k) + ".h5"
+        filename_qf = file_name + "_qf_" + str(k) + ".h5"
+        filename_time = file_name + "_time_" + str(k) + ".npy"
+        filename_history = file_name + "_history_" + str(k) + ".pickle"
+        filename_log = file_name + "_log_" + str(k) + ".txt"
+        
         # ----- Performing optimization -----
+        
         try:
             # Run continuation step if the save file does not exist
             if not (os.path.exists(filename_history) and os.path.exists(filename_eq)):
                 print("\n====================================")
                 print("Optimizing boundary modes M,N <= {}".format(k))
                 print("====================================")
+                
+                mem('*******     starting step: '+str(k))
                 time1 = time.time()
                 optimizer = Optimizer("proximal-lsq-auglag")
                 eq_new, out = eq_k.optimize(
@@ -308,6 +376,7 @@ def quasi_single_stage(
                     ftol=1e-5,
                     copy=True,
                 )
+                mem('*******     finishing step: '+str(k))
                 # Printing continuation stage result
                 qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
                 quadcoil_fbe1 = quadcoil_fbe.compute_scalar(
@@ -317,6 +386,7 @@ def quasi_single_stage(
                 quadcoil_fbe2 = quadcoil_fbe.compute_scalar(
                     *quadcoil_fbe.xs(eq_new)
                 )
+                mem('*******     saving step: '+str(k))
                 print("Pre-optimization QS value:  ", qs_objective1)
                 print("Pre-optimization FBE value: ", quadcoil_fbe1)
                 print("Post-optimization QS value: ", qs_objective2)
@@ -368,5 +438,5 @@ def quasi_single_stage(
         _, _, dofs_init, status_init = quadcoil_fbe.solve_quadcoil(
             *quadcoil_fbe.xs(eq_new)
         )
-
+        
     return eqfam, out_list, quadcoil_fbe
