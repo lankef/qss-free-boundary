@@ -179,7 +179,7 @@ quadcoil_kwargs_nescoil = quadcoil_kwargs_basic | {
 
 # Solve NESCOIL to estimate some scaling factors
 nescoil_objective = QuadcoilProxy(
-    eq=eq_init,
+    eq=eq_init.copy(),
     quadcoil_kwargs=quadcoil_kwargs_nescoil,
     vacuum=vacuum,
     # If you have additional filament/planar coils, put the CoilSet here.
@@ -234,6 +234,7 @@ def quasi_single_stage(
         M=eq.M_grid, N=eq.N_grid, NFP=eq.NFP, rho=np.array([1.0]), sym=True
     )
     out_list = []
+    quadcoil_fbe = None
 
     
     mem('*******     eqfam')
@@ -248,82 +249,79 @@ def quasi_single_stage(
     print("Boundary mode steps:", k_list)
 
     # ----- QSS loop -----
-    
-    # ----- Objectives -----
-    
-    qs_objective = QuasisymmetryTwoTerm(
-        eq=eq,
-        bounds=(-qs_bound, qs_bound),
-        normalize_target=False,
-        weight=qs_weight,
-    )
-    qs_objective.build()
-    obj_list_base = [
-        Volume(
-            eq=eq,
-            bounds=(vol_l, vol_u),
-            normalize_target=False,
-            weight=vol_weight,
-        ),
-        # Axis rotational transform
-        RotationalTransform(
-            eq=eq,
-            bounds=(iota_l, iota_u),
-            normalize_target=False,
-            weight=iota_weight,
-            grid=iotagridaxis,
-        ),
-        # Edge rotational transform
-        RotationalTransform(
-            eq=eq,
-            bounds=(iota_l, iota_u),
-            normalize_target=False,
-            weight=iota_weight,
-            grid=iotagridedge,
-        ),
-        qs_objective,
-    ]
-    # QS objective
-    # Mostly used in quasi-single-stage but also
-    # used to get single-stage init guess
-    if objective_mode == "free":
-        quadcoil_fbe = QuadcoilFreeBoundaryError(
-            eq=eq,
-            quadcoil_kwargs=quadcoil_kwargs,
-            enable_net_current_plasma=True,
-            vacuum=vacuum,
-            normalize=True,
-            normalize_target=False,
-            weight=quadcoil_weight,
-        )
-    elif objective_mode == "fixed":
-        quadcoil_fbe = QuadcoilProxy(
-            eq=eq,
-            quadcoil_kwargs=quadcoil_kwargs,
-            enable_net_current_plasma=True,
-            vacuum=vacuum,
-            metric_name=('f_B',),
-            metric_target=np.array([0.,]),
-            metric_weight=np.array([quadcoil_weight/f_B_nescoil,]),
-            normalize=False,
-            normalize_target=False,
-            eq_fixed=False,  # Whether the equilibrium are fixed
-        )
-    else:
+    # Rebuild objectives and constraints on eq_k each step. ProximalProjection
+    # requires them to target the same Equilibrium object passed to optimize().
+
+    if objective_mode not in ("free", "fixed"):
         raise ValueError(
             "objective_mode must be 'free' or 'fixed', got: "
             + repr(objective_mode)
         )
-    quadcoil_fbe.build()
-    objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe])
-    
-    mem('*******     objectives and constraints built')
 
     for i in range(len(k_list)):
         k = k_list[i]
         eq_k = eqfam[-1].copy()
-        #  ----- Constraints -----
-        
+
+        # ----- Objectives -----
+        qs_objective = QuasisymmetryTwoTerm(
+            eq=eq_k,
+            bounds=(-qs_bound, qs_bound),
+            normalize_target=False,
+            weight=qs_weight,
+        )
+        qs_objective.build()
+        obj_list_base = [
+            Volume(
+                eq=eq_k,
+                bounds=(vol_l, vol_u),
+                normalize_target=False,
+                weight=vol_weight,
+            ),
+            # Axis rotational transform
+            RotationalTransform(
+                eq=eq_k,
+                bounds=(iota_l, iota_u),
+                normalize_target=False,
+                weight=iota_weight,
+                grid=iotagridaxis,
+            ),
+            # Edge rotational transform
+            RotationalTransform(
+                eq=eq_k,
+                bounds=(iota_l, iota_u),
+                normalize_target=False,
+                weight=iota_weight,
+                grid=iotagridedge,
+            ),
+            qs_objective,
+        ]
+        if objective_mode == "free":
+            quadcoil_fbe = QuadcoilFreeBoundaryError(
+                eq=eq_k,
+                quadcoil_kwargs=quadcoil_kwargs_obj,
+                enable_net_current_plasma=True,
+                vacuum=vacuum,
+                normalize=True,
+                normalize_target=False,
+                weight=quadcoil_weight,
+            )
+        else:
+            quadcoil_fbe = QuadcoilProxy(
+                eq=eq_k,
+                quadcoil_kwargs=quadcoil_kwargs_obj,
+                enable_net_current_plasma=True,
+                vacuum=vacuum,
+                metric_name=('f_B',),
+                metric_target=np.array([0.,]),
+                metric_weight=np.array([quadcoil_weight/f_B_nescoil,]),
+                normalize=False,
+                normalize_target=False,
+                eq_fixed=False,  # Whether the equilibrium are fixed
+            )
+        quadcoil_fbe.build()
+        objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe])
+
+        # ----- Constraints -----
         # as opposed to SIMSOPT and STELLOPT where variables are assumed fixed, in DESC
         # we assume variables are free. Here we decide which ones to fix, starting with
         # the major radius (R mode = [0,0,0]) and all modes with m,n > k
@@ -340,14 +338,15 @@ def quasi_single_stage(
         ]
         # next we create the constraints, using the mode number arrays just created
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
-        constraints_base = [
-            ForceBalance(eq=eq),
-            FixBoundaryR(eq=eq, modes=R_modes),
-            FixBoundaryZ(eq=eq, modes=Z_modes),
-            # FixPsi(eq),
-            FixCurrent(eq),
+        constraints = [
+            ForceBalance(eq=eq_k),
+            FixBoundaryR(eq=eq_k, modes=R_modes),
+            FixBoundaryZ(eq=eq_k, modes=Z_modes),
+            # FixPsi(eq_k),
+            FixCurrent(eq_k),
         ]
-        constraints = constraints_base
+
+        mem('*******     objectives and constraints built for k=' + str(k))
         
         filename_eq = file_name + "_eq_" + str(k) + ".h5"
         filename_qf = file_name + "_qf_" + str(k) + ".h5"
