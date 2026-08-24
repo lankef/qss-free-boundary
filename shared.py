@@ -135,7 +135,7 @@ qs_bound = 1e-4 # Helios boozer error is between 2.1e-3 and 5.8e-3
 # Bounds for iota
 iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
-optimizer_name = "proximal-lsq-auglag" # "proximal-lsq-auglag"
+optimizer_name = "proximal-lsq-auglag"
 jac_chunk_size = 32 
 bs_chunk_size = 32
 
@@ -268,7 +268,7 @@ def quasi_single_stage(
         qs_objective = QuasisymmetryTwoTerm(
             eq=eq_k,
             bounds=(-qs_bound, qs_bound),
-            normalize_target=False,
+            # normalize_target=False,
             weight=qs_weight,
         )
         qs_objective.build()
@@ -276,14 +276,14 @@ def quasi_single_stage(
             Volume(
                 eq=eq_k,
                 bounds=(vol_l, vol_u),
-                normalize_target=False,
+                # normalize_target=False,
                 weight=vol_weight,
             ),
             # Axis rotational transform
             RotationalTransform(
                 eq=eq_k,
                 bounds=(iota_l, iota_u),
-                normalize_target=False,
+                # normalize_target=False,
                 weight=iota_weight,
                 grid=iotagridaxis,
             ),
@@ -291,7 +291,7 @@ def quasi_single_stage(
             RotationalTransform(
                 eq=eq_k,
                 bounds=(iota_l, iota_u),
-                normalize_target=False,
+                # normalize_target=False,
                 weight=iota_weight,
                 grid=iotagridedge,
             ),
@@ -303,7 +303,7 @@ def quasi_single_stage(
                 quadcoil_kwargs=quadcoil_kwargs_obj,
                 enable_net_current_plasma=True,
                 vacuum=vacuum,
-                normalize=True,
+                normalize=True, # This combination: target in normalized
                 normalize_target=False,
                 weight=quadcoil_weight,
                 bs_chunk_size=bs_chunk_size,
@@ -344,8 +344,8 @@ def quasi_single_stage(
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
         constraints = [
             ForceBalance(eq=eq_k, jac_chunk_size=jac_chunk_size),
-            # FixBoundaryR(eq=eq_k, modes=R_modes),
-            # FixBoundaryZ(eq=eq_k, modes=Z_modes),
+            FixBoundaryR(eq=eq_k, modes=R_modes),
+            FixBoundaryZ(eq=eq_k, modes=Z_modes),
             # FixPsi(eq_k),
             FixCurrent(eq_k),
             FixPressure(eq_k),
