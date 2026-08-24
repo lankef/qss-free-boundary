@@ -66,70 +66,69 @@ _HISTORY = []
 # are used by one big request. 
 def mem(tag):
     """Print JAX allocator stats. Safe to call anywhere."""
-    try:
-        s = _DEV.memory_stats() or {}
-    except Exception as e:                      # CPU backend, or unsupported
-        print(f"[mem:{tag}] memory_stats unavailable: {e}", flush=True)
-        return
-    rec = {
-        'tag': tag,
-        'in_use': s.get('bytes_in_use', 0) / _GiB,
-        # bytes currently handed out by the BFC allocator and not yet freed
-        # i.e. your live JAX arrays at the moment you call memory_stats().
-        'peak': s.get('peak_bytes_in_use', 0) / _GiB, 
-        'pool': s.get('pool_bytes', 0) / _GiB,
-        'largest': s.get('largest_alloc_size', 0) / _GiB,
-        'num_allocs': s.get('num_allocs', 0),
-    }
-    _HISTORY.append(rec)
-    print(
-        f"[mem:{tag:>16}] in_use={rec['in_use']:7.3f} GiB  "
-        f"peak={rec['peak']:7.3f} GiB  pool={rec['pool']:7.3f} GiB  "
-        f"largest={rec['largest']:7.3f} GiB  n_alloc={rec['num_allocs']}",
-        flush=True,
-    )
+    print('mem')
+    # try:
+    #     s = _DEV.memory_stats() or {}
+    # except Exception as e:                      # CPU backend, or unsupported
+    #     print(f"[mem:{tag}] memory_stats unavailable: {e}", flush=True)
+    #     return
+    # rec = {
+    #     'tag': tag,
+    #     'in_use': s.get('bytes_in_use', 0) / _GiB,
+    #     # bytes currently handed out by the BFC allocator and not yet freed
+    #     # i.e. your live JAX arrays at the moment you call memory_stats().
+    #     'peak': s.get('peak_bytes_in_use', 0) / _GiB, 
+    #     'pool': s.get('pool_bytes', 0) / _GiB,
+    #     'largest': s.get('largest_alloc_size', 0) / _GiB,
+    #     'num_allocs': s.get('num_allocs', 0),
+    # }
+    # _HISTORY.append(rec)
+    # print(
+    #     f"[mem:{tag:>16}] in_use={rec['in_use']:7.3f} GiB  "
+    #     f"peak={rec['peak']:7.3f} GiB  pool={rec['pool']:7.3f} GiB  "
+    #     f"largest={rec['largest']:7.3f} GiB  n_alloc={rec['num_allocs']}",
+    #     flush=True,
+    # )
 
 
 def mem_summary():
-    if not _HISTORY:
-        return
-    print("\n===== JAX memory summary =====", flush=True)
-    print(f"{'stage':>18}  {'in_use(GiB)':>11}  {'peak(GiB)':>10}", flush=True)
-    for r in _HISTORY:
-        print(f"{r['tag']:>18}  {r['in_use']:11.3f}  {r['peak']:10.3f}", flush=True)
-    print(f"\nJAX peak_bytes_in_use = {_HISTORY[-1]['peak']:.3f} GiB", flush=True)
-    print("Compare against the max of mem_<jobid>.csv; the difference is "
-          "non-JAX memory (cuDSS workspace, PETSc, CUDA context).", flush=True)
-
-
-
-
-
+    print('mem summary')
+    # if not _HISTORY:
+    #     return
+    # print("\n===== JAX memory summary =====", flush=True)
+    # print(f"{'stage':>18}  {'in_use(GiB)':>11}  {'peak(GiB)':>10}", flush=True)
+    # for r in _HISTORY:
+    #     print(f"{r['tag']:>18}  {r['in_use']:11.3f}  {r['peak']:10.3f}", flush=True)
+    # print(f"\nJAX peak_bytes_in_use = {_HISTORY[-1]['peak']:.3f} GiB", flush=True)
+    # print("Compare against the max of mem_<jobid>.csv; the difference is "
+    #       "non-JAX memory (cuDSS workspace, PETSc, CUDA context).", flush=True)
+    
 mem('*******     start')
 
 
-# Creating toroidal initial state
+# Creating toroidal vacuum initial state
 vacuum = True
 surf = FourierRZToroidalSurface(
-    R_lmn=[8.0, 1.0],
-    modes_R=[[0, 0], [2, 0]],
-    Z_lmn=[-2.0],
+    R_lmn=[8.0, 1.8],
+    modes_R=[[0, 0], [1, 0]],
+    Z_lmn=[-1.8],
     modes_Z=[[-1, 0]],
     NFP=2,
 )
 eq_init = Equilibrium(
-    L=16, M=16, N=16, # Psi=1.0, 
+    L=8, M=8, N=8, # Psi=1.0, 
     surface=surf, 
     current=PowerSeriesProfile(),
+    pressure=PowerSeriesProfile(),
     # pressure=pres, iota=iota
 )
-eq_init.solve()
-eq_init, info = eq_init.solve(verbose=3, copy=False)
+eq_init.solve(verbose=3)
+# eq_init, info = eq_init.solve(, copy=False)
 
 # ----- Targets -----
 
 # Field-on-coil at the dipole layer
-B2_self_target = 15.**2 
+B2_self_target = 20.**2 
 plasma_coil_distance = 1.5 
 # Bound for 2-term QS error
 qs_bound = 1e-4 # Helios boozer error is between 2.1e-3 and 5.8e-3
@@ -138,6 +137,7 @@ iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
 optimizer_name = "proximal-lsq-auglag" # "proximal-lsq-auglag"
 jac_chunk_size = 32 
+bs_chunk_size = 32
 
 # ----- Quadcoil Resolution -----
 
@@ -306,6 +306,7 @@ def quasi_single_stage(
                 normalize=True,
                 normalize_target=False,
                 weight=quadcoil_weight,
+                bs_chunk_size=bs_chunk_size,
             )
         else:
             quadcoil_fbe = QuadcoilProxy(
@@ -319,9 +320,10 @@ def quasi_single_stage(
                 normalize=False,
                 normalize_target=False,
                 eq_fixed=False,  # Whether the equilibrium are fixed
+                bs_chunk_size=bs_chunk_size,
             )
         quadcoil_fbe.build()
-        objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe])
+        objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
 
         # ----- Constraints -----
         # as opposed to SIMSOPT and STELLOPT where variables are assumed fixed, in DESC
@@ -330,22 +332,23 @@ def quasi_single_stage(
         R_modes = np.vstack(
             (
                 [0, 0, 0],
-                eq.surface.R_basis.modes[
-                    np.max(np.abs(eq.surface.R_basis.modes), 1) > k, :
+                eq_k.surface.R_basis.modes[
+                    np.max(np.abs(eq_k.surface.R_basis.modes), 1) > k, :
                 ],
             )
         )
-        Z_modes = eq.surface.Z_basis.modes[
-            np.max(np.abs(eq.surface.Z_basis.modes), 1) > k, :
+        Z_modes = eq_k.surface.Z_basis.modes[
+            np.max(np.abs(eq_k.surface.Z_basis.modes), 1) > k, :
         ]
         # next we create the constraints, using the mode number arrays just created
         # if we didn't pass those in, it would fix all the modes (like for the profiles)
         constraints = [
             ForceBalance(eq=eq_k, jac_chunk_size=jac_chunk_size),
-            FixBoundaryR(eq=eq_k, modes=R_modes),
-            FixBoundaryZ(eq=eq_k, modes=Z_modes),
+            # FixBoundaryR(eq=eq_k, modes=R_modes),
+            # FixBoundaryZ(eq=eq_k, modes=Z_modes),
             # FixPsi(eq_k),
             FixCurrent(eq_k),
+            FixPressure(eq_k),
         ]
 
         mem('*******     objectives and constraints built for k=' + str(k))
@@ -364,7 +367,10 @@ def quasi_single_stage(
                 print("\n====================================")
                 print("Optimizing boundary modes M,N <= {}".format(k))
                 print("====================================")
-                
+                qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
+                quadcoil_fbe1 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_k))
+                print("Pre-optimization QS value:  ", qs_objective1)
+                print("Pre-optimization FBE value: ", quadcoil_fbe1)
                 mem('*******     starting step: '+str(k))
                 time1 = time.time()
                 optimizer = Optimizer(optimizer_name)
@@ -379,17 +385,8 @@ def quasi_single_stage(
                 )
                 mem('*******     finishing step: '+str(k))
                 # Printing continuation stage result
-                qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
-                quadcoil_fbe1 = quadcoil_fbe.compute_scalar(
-                    *quadcoil_fbe.xs(eq_k)
-                )
                 qs_objective2 = qs_objective.compute_scalar(*qs_objective.xs(eq_new))
-                quadcoil_fbe2 = quadcoil_fbe.compute_scalar(
-                    *quadcoil_fbe.xs(eq_new)
-                )
-                mem('*******     saving step: '+str(k))
-                print("Pre-optimization QS value:  ", qs_objective1)
-                print("Pre-optimization FBE value: ", quadcoil_fbe1)
+                quadcoil_fbe2 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_new))
                 print("Post-optimization QS value: ", qs_objective2)
                 print("Post-optimization FBE value:", quadcoil_fbe2)
                 time2 = time.time()
