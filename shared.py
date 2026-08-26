@@ -254,9 +254,9 @@ def quasi_single_stage(
     # Rebuild objectives and constraints on eq_k each step. ProximalProjection
     # requires them to target the same Equilibrium object passed to optimize().
 
-    if objective_mode not in ("free", "fixed"):
+    if objective_mode not in ("free", "fixed", None):
         raise ValueError(
-            "objective_mode must be 'free' or 'fixed', got: "
+            "objective_mode must be 'free', 'fixed', or None, got: "
             + repr(objective_mode)
         )
 
@@ -308,7 +308,9 @@ def quasi_single_stage(
                 weight=quadcoil_weight,
                 bs_chunk_size=bs_chunk_size,
             )
-        else:
+            quadcoil_fbe.build()
+            objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
+        elif objective_mode == "fixed":
             quadcoil_fbe = QuadcoilProxy(
                 eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs_obj,
@@ -322,8 +324,11 @@ def quasi_single_stage(
                 eq_fixed=False,  # Whether the equilibrium are fixed
                 bs_chunk_size=bs_chunk_size,
             )
-        quadcoil_fbe.build()
-        objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
+            quadcoil_fbe.build()
+            objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
+        else:
+            quadcoil_fbe = None
+            objective = ObjectiveFunction(obj_list_base) #, deriv_mode="batched", jac_chunk_size=1)
 
         # ----- Constraints -----
         # as opposed to SIMSOPT and STELLOPT where variables are assumed fixed, in DESC
@@ -368,9 +373,10 @@ def quasi_single_stage(
                 print("Optimizing boundary modes M,N <= {}".format(k))
                 print("====================================")
                 qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
-                quadcoil_fbe1 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_k))
                 print("Pre-optimization QS value:  ", qs_objective1)
-                print("Pre-optimization FBE value: ", quadcoil_fbe1)
+                if objective_mode is not None:
+                    quadcoil_fbe1 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_k))
+                    print("Pre-optimization FBE value: ", quadcoil_fbe1)
                 mem('*******     starting step: '+str(k))
                 time1 = time.time()
                 optimizer = Optimizer(optimizer_name)
@@ -386,9 +392,10 @@ def quasi_single_stage(
                 mem('*******     finishing step: '+str(k))
                 # Printing continuation stage result
                 qs_objective2 = qs_objective.compute_scalar(*qs_objective.xs(eq_new))
-                quadcoil_fbe2 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_new))
                 print("Post-optimization QS value: ", qs_objective2)
-                print("Post-optimization FBE value:", quadcoil_fbe2)
+                if objective_mode is not None:
+                    quadcoil_fbe2 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_new))
+                    print("Post-optimization FBE value:", quadcoil_fbe2)
                 time2 = time.time()
                 jnp.save(filename_time, time2 - time1)
                 eq_new.save(filename_eq)
@@ -397,15 +404,16 @@ def quasi_single_stage(
                     pickle.dump(out, dbfile)
                 with open(filename_log, "w") as f:
                     f.write("Pre-optimization QS value:" + str(qs_objective1))
-                    f.write(
-                        "Pre-optimization quadcoil value:"
-                        + str(quadcoil_fbe1)
-                    )
                     f.write("Post-optimization QS value:" + str(qs_objective2))
-                    f.write(
-                        "Post-optimization quadcoil value:"
-                        + str(quadcoil_fbe2)
-                    )
+                    if objective_mode is not None:
+                        f.write(
+                            "Pre-optimization quadcoil value:"
+                            + str(quadcoil_fbe1)
+                        )
+                        f.write(
+                            "Post-optimization quadcoil value:"
+                            + str(quadcoil_fbe2)
+                        )
                     f.write("=== Optimization Result ===\n")
                     f.write(pformat(dict(out), indent=2))
                     f.write("\n")
@@ -433,8 +441,10 @@ def quasi_single_stage(
             eqfam.save(file_name + "_eqfam_" + ".h5")
         except KeyboardInterrupt:
             break
-        _, _, dofs_init, status_init = quadcoil_fbe.solve_quadcoil(
-            *quadcoil_fbe.xs(eq_new)
-        )
         
+        if objective_mode is not None:
+            _, _, dofs_init, status_init = quadcoil_fbe.solve_quadcoil(
+                *quadcoil_fbe.xs(eq_new)
+            )
+            
     return eqfam, out_list, quadcoil_fbe
