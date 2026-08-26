@@ -109,14 +109,14 @@ mem('*******     start')
 # Creating toroidal vacuum initial state
 vacuum = True
 surf = FourierRZToroidalSurface(
-    R_lmn=[8.0, 1.8],
-    modes_R=[[0, 0], [1, 0]],
-    Z_lmn=[-1.8],
-    modes_Z=[[-1, 0]],
+    R_lmn=[8.0, 1.8, 1.7],
+    Z_lmn=[-1.8, 1.7],
+    modes_R=[[0, 0], [1, 0], [0, 1]],
+    modes_Z=[[-1, 0], [0, -1]],
     NFP=2,
 )
 eq_init = Equilibrium(
-    L=8, M=8, N=8, # Psi=1.0, 
+    L=16, M=16, N=16, # Psi=1.0, 
     surface=surf, 
     current=PowerSeriesProfile(),
     pressure=PowerSeriesProfile(),
@@ -141,8 +141,8 @@ bs_chunk_size = 32
 
 # ----- Quadcoil Resolution -----
 
-mpol = 8  # Num. poloidal modes for the current potential
-ntor = 8  # Num. toroidal modes for the current potential
+mpol = 10  # Num. poloidal modes for the current potential
+ntor = 10  # Num. toroidal modes for the current potential
 # Resolution for sampling objectives
 quadpoints_phi = jnp.linspace(0, 1 / eq_init.NFP, 32, endpoint=False)
 quadpoints_theta = jnp.linspace(0, 1, 32, endpoint=False)
