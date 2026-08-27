@@ -115,14 +115,19 @@ surf = FourierRZToroidalSurface(
     modes_Z=[[-1, 0], [0, -1]],
     NFP=2,
 )
-eq_init = Equilibrium(
-    L=16, M=16, N=16, # Psi=1.0, 
-    surface=surf, 
-    current=PowerSeriesProfile(),
-    pressure=PowerSeriesProfile(),
-    # pressure=pres, iota=iota
-)
-eq_init.solve(verbose=3)
+filename_init = 'init_eq.h5'
+if os.path.exists(filename_init):
+    eq_init = desc.io.load(filename_init, file_format="hdf5")
+else:
+    eq_init = Equilibrium(
+        L=16, M=16, N=16, # Psi=1.0, 
+        surface=surf, 
+        current=PowerSeriesProfile(),
+        pressure=PowerSeriesProfile(),
+        # pressure=pres, iota=iota
+    )
+    eq_init.solve(verbose=3)
+    eq_init.save(filename_init)
 # eq_init, info = eq_init.solve(, copy=False)
 
 # ----- Targets -----
