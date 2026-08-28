@@ -1,7 +1,7 @@
-Job ID:         16487914
+Job ID:         16500925
 Nodes:          1
 CPUs per task:  4
-Start time:     Thu Aug 27 18:17:38 EDT 2026
+Start time:     Fri Aug 28 00:05:29 EDT 2026
 mem
 Precomputing transforms
 mem
@@ -17,28 +17,28 @@ Pre-optimization QS value:   1957.9681787676172
 mem
 Building objective: volume
 Precomputing transforms
-Timer: Precomputing transforms = 727 ms
+Timer: Precomputing transforms = 742 ms
 Building objective: rotational transform
 Precomputing transforms
-Timer: Precomputing transforms = 575 ms
+Timer: Precomputing transforms = 570 ms
 Building objective: rotational transform
 Precomputing transforms
-Timer: Precomputing transforms = 26.5 ms
-Timer: Objective build = 1.75 sec
+Timer: Precomputing transforms = 26.3 ms
+Timer: Objective build = 1.78 sec
 Building objective: force
 Precomputing transforms
-Timer: Precomputing transforms = 822 ms
-Timer: Objective build = 876 ms
+Timer: Precomputing transforms = 815 ms
+Timer: Objective build = 875 ms
 Timer: Objective build = 2.07 ms
-Timer: Eq Update LinearConstraintProjection build = 3.53 sec
+Timer: Eq Update LinearConstraintProjection build = 3.52 sec
 Timer: Proximal projection build = 24.6 sec
 Building objective: lcfs R
 Building objective: lcfs Z
 Building objective: fixed Psi
 Building objective: fixed current
 Building objective: fixed pressure
-Timer: Objective build = 756 ms
-Timer: LinearConstraintProjection build = 1.87 sec
+Timer: Objective build = 752 ms
+Timer: LinearConstraintProjection build = 1.86 sec
 Number of parameters: 80
 Number of objectives: 531
 Timer: Initializing the optimization = 27.4 sec
@@ -93,8 +93,8 @@ Warning: A bad approximation caused failure to predict improvement.
          Iterations: 17
          Function evaluations: 55
          Jacobian evaluations: 16
-Timer: Solution time = 7.69 min
-Timer: Avg time per step = 25.6 sec
+Timer: Solution time = 7.67 min
+Timer: Avg time per step = 25.5 sec
 ==============================================================================================================
                                                                  Start  -->   End
 Total (sum of squares):                                      2.004e+03  -->   2.137e+00, 
@@ -128,108 +128,4 @@ Fixed pressure profile error:                                0.000e+00  -->   0.
 mem
 Post-optimization QS value:  0.9586825002130916
 Precomputing transforms
-mem
-
-====================================
-Optimizing boundary modes M,N <= 8
-====================================
-Pre-optimization QS value:   0.9439172044732463
-mem
-Building objective: volume
-Precomputing transforms
-Timer: Precomputing transforms = 28.8 ms
-Building objective: rotational transform
-Precomputing transforms
-Timer: Precomputing transforms = 27.4 ms
-Building objective: rotational transform
-Precomputing transforms
-Timer: Precomputing transforms = 27.6 ms
-Timer: Objective build = 97.2 ms
-Building objective: force
-Precomputing transforms
-Timer: Precomputing transforms = 65.5 ms
-Timer: Objective build = 78.5 ms
-Timer: Objective build = 1.34 ms
-Timer: Eq Update LinearConstraintProjection build = 110 ms
-Timer: Proximal projection build = 1.47 sec
-Building objective: lcfs R
-Building objective: lcfs Z
-Building objective: fixed Psi
-Building objective: fixed current
-Building objective: fixed pressure
-Timer: Objective build = 153 ms
-Timer: LinearConstraintProjection build = 1.36 sec
-Number of parameters: 288
-Number of objectives: 531
-Timer: Initializing the optimization = 3.14 sec
-
-Starting optimization
-Using method: proximal-lsq-auglag
-Solver options:
-------------------------------------------------------------
-Maximum Function Evaluations       : 2501
-Maximum Allowed Total Δx Norm      : inf
-Scaled Termination                 : True
-Trust Region Method                : qr
-Initial Trust Radius               : 1.509e-02
-Maximum Trust Radius               : inf
-Minimum Trust Radius               : 2.220e-16
-Trust Radius Increase Ratio        : 4.000e+00
-Trust Radius Decrease Ratio        : 2.500e-01
-Trust Radius Increase Threshold    : 7.500e-01
-Trust Radius Decrease Threshold    : 5.000e-01
-Alpha Omega                        : 1.000e+00
-Beta Omega                         : 1.000e+00
-Alpha Eta                          : 1.000e-01
-Beta Eta                           : 9.000e-01
-Omega                              : 1.000e-02
-Eta                                : 0.000e+00
-Tau                                : 9.000e-01
------------------------------------------------------------- 
-
-   Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality    Constr viol.   Penalty param  max(|mltplr|) 
-       0              1          2.156e+00                                    6.055e-01      0.000e+00      1.000e+01      0.000e+00   
-       1              2          2.137e+00      1.875e-02      1.776e-04      6.181e-01      0.000e+00      1.000e+01      0.000e+00   
-       2             25          2.137e+00      0.000e+00      0.000e+00      6.181e-01      0.000e+00      1.000e+01      0.000e+00   
-Warning: A bad approximation caused failure to predict improvement.
-         Current function value: 2.137e+00
-         Constraint violation: 0.000e+00
-         Total delta_x: 1.776e-04
-         Iterations: 2
-         Function evaluations: 25
-         Jacobian evaluations: 1
-Timer: Solution time = 1.24 min
-Timer: Avg time per step = 24.7 sec
-==============================================================================================================
-                                                                 Start  -->   End
-Total (sum of squares):                                      2.156e+00  -->   2.137e+00, 
-Plasma volume:                                               5.470e+02  -->   5.469e+02 (m^3)
-Plasma volume:                                               0.000e+00  -->   0.000e+00 (normalized error)
-Maximum Rotational transform:                                8.323e-02  -->   8.312e-02 (dimensionless)
-Minimum Rotational transform:                                8.323e-02  -->   8.312e-02 (dimensionless)
-Average Rotational transform:                                8.323e-02  -->   8.312e-02 (dimensionless)
-Maximum Rotational transform:                                5.165e-02  -->   5.221e-02 (dimensionless)
-Minimum Rotational transform:                                5.165e-02  -->   5.221e-02 (dimensionless)
-Average Rotational transform:                                5.165e-02  -->   5.221e-02 (dimensionless)
-Maximum Quasi-symmetry (1,0) Boozer error:                   5.325e-03  -->   5.017e-03 (T)
-Minimum Quasi-symmetry (1,0) Boozer error:                  -5.057e-03  -->  -5.080e-03 (T)
-Average Quasi-symmetry (1,0) Boozer error:                   2.333e-05  -->   2.264e-05 (T)
-Maximum Quasi-symmetry (1,0) Boozer error:                   8.614e-04  -->   8.116e-04 (normalized)
-Minimum Quasi-symmetry (1,0) Boozer error:                  -8.180e-04  -->  -8.218e-04 (normalized)
-Average Quasi-symmetry (1,0) Boozer error:                   3.775e-06  -->   3.663e-06 (normalized)
-Maximum absolute Force error:                                4.187e+07  -->   4.113e+07 (N)
-Minimum absolute Force error:                                1.483e+01  -->   2.134e+01 (N)
-Average absolute Force error:                                3.113e+05  -->   3.095e+05 (N)
-Maximum absolute Force error:                                9.720e-03  -->   9.549e-03 (normalized)
-Minimum absolute Force error:                                3.442e-09  -->   4.955e-09 (normalized)
-Average absolute Force error:                                7.227e-05  -->   7.186e-05 (normalized)
-R boundary error:                                            0.000e+00  -->   0.000e+00 (m)
-Z boundary error:                                            0.000e+00  -->   0.000e+00 (m)
-Fixed Psi error:                                             0.000e+00  -->   0.000e+00 (Wb)
-Fixed current profile error:                                 0.000e+00  -->   0.000e+00 (A)
-Fixed pressure profile error:                                0.000e+00  -->   0.000e+00 (Pa)
-==============================================================================================================
-
-mem
-Post-optimization QS value:  0.980946465214159
-End time:       Thu Aug 27 18:28:05 EDT 2026
+End time:       Fri Aug 28 00:14:55 EDT 2026

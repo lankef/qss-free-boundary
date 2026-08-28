@@ -1,0 +1,10 @@
+/scratch/lf2869/code/DESC/desc/__init__.py:94: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  from pynvml import (
+Traceback (most recent call last):
+  File "/scratch/lf2869/project/qss-free-boundary/./fixed.py", line 15, in <module>
+    eqfam_f_max_phi, out_list_f_max_phi, quadcoil_objective_f_max_phi = quasi_single_stage(
+                                                                        ^^^^^^^^^^^^^^^^^^^
+  File "/scratch/lf2869/project/qss-free-boundary/shared.py", line 328, in quasi_single_stage
+    metric_weight=np.array([quadcoil_weight_eff/f_B_nescoil,]),
+                            ^^^^^^^^^^^^^^^^^^^
+NameError: name 'quadcoil_weight_eff' is not defined. Did you mean: 'quadcoil_weight'?

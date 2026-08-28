@@ -120,7 +120,7 @@ if os.path.exists(filename_init):
     eq_init = desc.io.load(filename_init, file_format="hdf5")
 else:
     eq_init = Equilibrium(
-        L=8, M=8, N=8, # L=16, M=16, N=16, 
+        L=16, M=16, N=16, # L=8, M=8, N=8, # 
         Psi=50.0, 
         surface=surf, 
         current=PowerSeriesProfile(),
@@ -229,6 +229,7 @@ def quasi_single_stage(
     step=4,
     max_k=None,  # Maximum continuation boundary mode number
     printout=False,  # Whether to run dummy optimization even when data exists for printout.
+    switch_k=7,
 ):
 
     # ----- Initializing objects and grids -----
@@ -303,7 +304,7 @@ def quasi_single_stage(
             ),
             qs_objective,
         ]
-        if objective_mode == "free":
+        if objective_mode == "free" and k >= switch_k:
             quadcoil_fbe = QuadcoilFreeBoundaryError(
                 eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs_obj,
@@ -311,12 +312,12 @@ def quasi_single_stage(
                 vacuum=vacuum,
                 normalize=True, # This combination: target in normalized
                 normalize_target=False,
-                weight=quadcoil_weight,
+                weight=quadcoil_weight_eff,
                 bs_chunk_size=bs_chunk_size,
             )
             quadcoil_fbe.build()
             objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
-        elif objective_mode == "fixed":
+        elif objective_mode == "fixed" and k >= switch_k:
             quadcoil_fbe = QuadcoilProxy(
                 eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs_obj,
@@ -324,7 +325,7 @@ def quasi_single_stage(
                 vacuum=vacuum,
                 metric_name=('f_B',),
                 metric_target=np.array([0.,]),
-                metric_weight=np.array([quadcoil_weight/f_B_nescoil,]),
+                metric_weight=np.array([quadcoil_weight_eff/f_B_nescoil,]),
                 normalize=False,
                 normalize_target=False,
                 eq_fixed=False,  # Whether the equilibrium are fixed
@@ -380,7 +381,7 @@ def quasi_single_stage(
                 print("====================================")
                 qs_objective1 = qs_objective.compute_scalar(*qs_objective.xs(eq_k))
                 print("Pre-optimization QS value:  ", qs_objective1)
-                if objective_mode is not None:
+                if quadcoil_fbe is not None:
                     quadcoil_fbe1 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_k))
                     print("Pre-optimization FBE value: ", quadcoil_fbe1)
                 mem('*******     starting step: '+str(k))
@@ -399,7 +400,7 @@ def quasi_single_stage(
                 # Printing continuation stage result
                 qs_objective2 = qs_objective.compute_scalar(*qs_objective.xs(eq_new))
                 print("Post-optimization QS value: ", qs_objective2)
-                if objective_mode is not None:
+                if quadcoil_fbe is not None:
                     quadcoil_fbe2 = quadcoil_fbe.compute_scalar(*quadcoil_fbe.xs(eq_new))
                     print("Post-optimization FBE value:", quadcoil_fbe2)
                 time2 = time.time()
@@ -411,7 +412,7 @@ def quasi_single_stage(
                 with open(filename_log, "w") as f:
                     f.write("Pre-optimization QS value:" + str(qs_objective1))
                     f.write("Post-optimization QS value:" + str(qs_objective2))
-                    if objective_mode is not None:
+                    if quadcoil_fbe is not None:
                         f.write(
                             "Pre-optimization quadcoil value:"
                             + str(quadcoil_fbe1)
@@ -448,7 +449,7 @@ def quasi_single_stage(
         except KeyboardInterrupt:
             break
         
-        if objective_mode is not None:
+        if quadcoil_fbe is not None:
             _, _, dofs_init, status_init = quadcoil_fbe.solve_quadcoil(
                 *quadcoil_fbe.xs(eq_new)
             )

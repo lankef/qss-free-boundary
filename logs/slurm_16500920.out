@@ -1,7 +1,7 @@
-Job ID:         16487959
+Job ID:         16500920
 Nodes:          1
 CPUs per task:  4
-Start time:     Thu Aug 27 18:20:03 EDT 2026
+Start time:     Fri Aug 28 00:02:17 EDT 2026
 mem
 Precomputing transforms
 mem
@@ -17,31 +17,31 @@ Pre-optimization QS value:   1957.9681787676172
 mem
 Building objective: volume
 Precomputing transforms
-Timer: Precomputing transforms = 710 ms
+Timer: Precomputing transforms = 720 ms
 Building objective: rotational transform
 Precomputing transforms
-Timer: Precomputing transforms = 573 ms
+Timer: Precomputing transforms = 567 ms
 Building objective: rotational transform
 Precomputing transforms
 Timer: Precomputing transforms = 25.9 ms
-Timer: Objective build = 1.75 sec
+Timer: Objective build = 1.74 sec
 Building objective: force
 Precomputing transforms
-Timer: Precomputing transforms = 831 ms
-Timer: Objective build = 890 ms
-Timer: Objective build = 2.02 ms
-Timer: Eq Update LinearConstraintProjection build = 3.52 sec
-Timer: Proximal projection build = 24.6 sec
+Timer: Precomputing transforms = 813 ms
+Timer: Objective build = 868 ms
+Timer: Objective build = 2.04 ms
+Timer: Eq Update LinearConstraintProjection build = 3.56 sec
+Timer: Proximal projection build = 24.9 sec
 Building objective: lcfs R
 Building objective: lcfs Z
 Building objective: fixed Psi
 Building objective: fixed current
 Building objective: fixed pressure
 Timer: Objective build = 750 ms
-Timer: LinearConstraintProjection build = 1.82 sec
+Timer: LinearConstraintProjection build = 1.85 sec
 Number of parameters: 80
 Number of objectives: 531
-Timer: Initializing the optimization = 27.4 sec
+Timer: Initializing the optimization = 27.6 sec
 
 Starting optimization
 Using method: proximal-lsq-auglag
@@ -93,8 +93,8 @@ Warning: A bad approximation caused failure to predict improvement.
          Iterations: 17
          Function evaluations: 55
          Jacobian evaluations: 16
-Timer: Solution time = 7.79 min
-Timer: Avg time per step = 25.9 sec
+Timer: Solution time = 7.59 min
+Timer: Avg time per step = 25.3 sec
 ==============================================================================================================
                                                                  Start  -->   End
 Total (sum of squares):                                      2.004e+03  -->   2.137e+00, 
@@ -129,41 +129,45 @@ mem
 Post-optimization QS value:  0.9586825002130916
 Precomputing transforms
 mem
-Step 8 exists.
-Still running a dummy optimization to print out stuff.
+
+====================================
+Optimizing boundary modes M,N <= 8
+====================================
+Pre-optimization QS value:   0.9439172044732463
+mem
 Building objective: volume
 Precomputing transforms
-Timer: Precomputing transforms = 28.5 ms
+Timer: Precomputing transforms = 28.2 ms
 Building objective: rotational transform
 Precomputing transforms
-Timer: Precomputing transforms = 27.7 ms
+Timer: Precomputing transforms = 27.5 ms
 Building objective: rotational transform
 Precomputing transforms
-Timer: Precomputing transforms = 26.8 ms
-Timer: Objective build = 98.4 ms
+Timer: Precomputing transforms = 26.9 ms
+Timer: Objective build = 97.9 ms
 Building objective: force
 Precomputing transforms
-Timer: Precomputing transforms = 64.7 ms
-Timer: Objective build = 77.6 ms
-Timer: Objective build = 1.30 ms
-Timer: Eq Update LinearConstraintProjection build = 111 ms
-Timer: Proximal projection build = 1.54 sec
+Timer: Precomputing transforms = 64.1 ms
+Timer: Objective build = 76.1 ms
+Timer: Objective build = 1.32 ms
+Timer: Eq Update LinearConstraintProjection build = 109 ms
+Timer: Proximal projection build = 1.43 sec
 Building objective: lcfs R
 Building objective: lcfs Z
 Building objective: fixed Psi
 Building objective: fixed current
 Building objective: fixed pressure
-Timer: Objective build = 152 ms
-Timer: LinearConstraintProjection build = 1.39 sec
+Timer: Objective build = 146 ms
+Timer: LinearConstraintProjection build = 1.36 sec
 Number of parameters: 288
 Number of objectives: 531
-Timer: Initializing the optimization = 3.25 sec
+Timer: Initializing the optimization = 3.08 sec
 
 Starting optimization
 Using method: proximal-lsq-auglag
 Solver options:
 ------------------------------------------------------------
-Maximum Function Evaluations       : 6
+Maximum Function Evaluations       : 2501
 Maximum Allowed Total Δx Norm      : inf
 Scaled Termination                 : True
 Trust Region Method                : qr
@@ -186,15 +190,16 @@ Tau                                : 9.000e-01
    Iteration     Total nfev        Cost      Cost reduction    Step norm     Optimality    Constr viol.   Penalty param  max(|mltplr|) 
        0              1          2.156e+00                                    6.055e-01      0.000e+00      1.000e+01      0.000e+00   
        1              2          2.137e+00      1.875e-02      1.776e-04      6.181e-01      0.000e+00      1.000e+01      0.000e+00   
-Warning: Maximum number of iterations has been exceeded.
+       2             25          2.137e+00      0.000e+00      0.000e+00      6.181e-01      0.000e+00      1.000e+01      0.000e+00   
+Warning: A bad approximation caused failure to predict improvement.
          Current function value: 2.137e+00
          Constraint violation: 0.000e+00
          Total delta_x: 1.776e-04
-         Iterations: 1
-         Function evaluations: 2
+         Iterations: 2
+         Function evaluations: 25
          Jacobian evaluations: 1
-Timer: Solution time = 46.8 sec
-Timer: Avg time per step = 23.4 sec
+Timer: Solution time = 1.20 min
+Timer: Avg time per step = 24.1 sec
 ==============================================================================================================
                                                                  Start  -->   End
 Total (sum of squares):                                      2.156e+00  -->   2.137e+00, 
@@ -225,4 +230,6 @@ Fixed current profile error:                                 0.000e+00  -->   0.
 Fixed pressure profile error:                                0.000e+00  -->   0.000e+00 (Pa)
 ==============================================================================================================
 
-End time:       Thu Aug 27 18:30:04 EDT 2026
+mem
+Post-optimization QS value:  0.980946465214159
+End time:       Fri Aug 28 00:12:42 EDT 2026
