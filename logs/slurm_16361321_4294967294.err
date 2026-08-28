@@ -1,3 +1,0 @@
-/scratch/lf2869/code/DESC/desc/__init__.py:94: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
-  from pynvml import (
-[2026-08-26T01:33:10.016] error: *** JOB 16361321 ON gl033 CANCELLED AT 2026-08-26T01:33:10 DUE TO TIME LIMIT ***

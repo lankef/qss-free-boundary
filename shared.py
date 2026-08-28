@@ -35,7 +35,7 @@ from desc.objectives import (
     RotationalTransform,
     VacuumBoundaryError,
     SurfaceCurrentRegularization,
-    QuasisymmetryTwoTerm,
+    QuasisymmetryBoozer,
     Volume,
     FixBoundaryR,
     FixBoundaryZ,
@@ -120,7 +120,8 @@ if os.path.exists(filename_init):
     eq_init = desc.io.load(filename_init, file_format="hdf5")
 else:
     eq_init = Equilibrium(
-        L=16, M=16, N=16, # Psi=1.0, 
+        L=8, M=8, N=8, # L=16, M=16, N=16, 
+        Psi=50.0, 
         surface=surf, 
         current=PowerSeriesProfile(),
         pressure=PowerSeriesProfile(),
@@ -136,7 +137,7 @@ else:
 B2_self_target = 20.**2 
 plasma_coil_distance = 1.5 
 # Bound for 2-term QS error
-qs_bound = 1e-4 # Helios boozer error is between 2.1e-3 and 5.8e-3
+qs_bound = 5e-5 # Helios boozer error is between 2.1e-3 and 5.8e-3
 # Bounds for iota
 iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
@@ -225,7 +226,7 @@ def quasi_single_stage(
     iota_weight=0.0,
     qs_weight=1.0,
     maxiter=500,  # Maximum iteration per Fourier continuation
-    step=2,
+    step=4,
     max_k=None,  # Maximum continuation boundary mode number
     printout=False,  # Whether to run dummy optimization even when data exists for printout.
 ):
@@ -252,7 +253,7 @@ def quasi_single_stage(
         max_k = eq.M + 1
     else:
         max_k = min(max_k, eq.M + 1)
-    k_list = range(3, eq.M + 1, step)
+    k_list = range(4, eq.M + 1, step)
     print("Boundary mode steps:", k_list)
 
     # ----- QSS loop -----
@@ -270,10 +271,10 @@ def quasi_single_stage(
         eq_k = eqfam[-1].copy()
 
         # ----- Objectives -----
-        qs_objective = QuasisymmetryTwoTerm(
+        qs_objective = QuasisymmetryBoozer(
             eq=eq_k,
             bounds=(-qs_bound, qs_bound),
-            # normalize_target=False,
+            normalize_target=False,
             weight=qs_weight,
         )
         qs_objective.build()
@@ -356,7 +357,7 @@ def quasi_single_stage(
             ForceBalance(eq=eq_k, jac_chunk_size=jac_chunk_size),
             FixBoundaryR(eq=eq_k, modes=R_modes),
             FixBoundaryZ(eq=eq_k, modes=Z_modes),
-            # FixPsi(eq_k),
+            FixPsi(eq_k),
             FixCurrent(eq_k),
             FixPressure(eq_k),
         ]

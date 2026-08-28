@@ -3,8 +3,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=100G
 #SBATCH --time=00:45:00
-#SBATCH --output=logs/slurm_mem_%A_%a.out
-#SBATCH --error=logs/slurm_mem_%A_%a.err
+#SBATCH --output=logs/slurm_mem_%A.out
+#SBATCH --error=logs/slurm_mem_%A.err
 #SBATCH --gres=gpu:l40s:1
 
 # Memory-diagnostic run. No nsys: the profiler adds overhead and its

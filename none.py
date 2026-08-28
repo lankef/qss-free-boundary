@@ -4,7 +4,7 @@ from shared import *
 # ## Optimization
 
 quadcoil_weight = 10. # 5. # 50. -> 90% improvement, 10x degradation in QS
-qs_weight = 50. # 5000.
+qs_weight = 500. # 5000.
 vol_weight = 30.
 iota_weight = 30.
 
