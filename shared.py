@@ -67,41 +67,41 @@ _HISTORY = []
 def mem(tag):
     """Print JAX allocator stats. Safe to call anywhere."""
     print('mem')
-    # try:
-    #     s = _DEV.memory_stats() or {}
-    # except Exception as e:                      # CPU backend, or unsupported
-    #     print(f"[mem:{tag}] memory_stats unavailable: {e}", flush=True)
-    #     return
-    # rec = {
-    #     'tag': tag,
-    #     'in_use': s.get('bytes_in_use', 0) / _GiB,
-    #     # bytes currently handed out by the BFC allocator and not yet freed
-    #     # i.e. your live JAX arrays at the moment you call memory_stats().
-    #     'peak': s.get('peak_bytes_in_use', 0) / _GiB, 
-    #     'pool': s.get('pool_bytes', 0) / _GiB,
-    #     'largest': s.get('largest_alloc_size', 0) / _GiB,
-    #     'num_allocs': s.get('num_allocs', 0),
-    # }
-    # _HISTORY.append(rec)
-    # print(
-    #     f"[mem:{tag:>16}] in_use={rec['in_use']:7.3f} GiB  "
-    #     f"peak={rec['peak']:7.3f} GiB  pool={rec['pool']:7.3f} GiB  "
-    #     f"largest={rec['largest']:7.3f} GiB  n_alloc={rec['num_allocs']}",
-    #     flush=True,
-    # )
+    try:
+        s = _DEV.memory_stats() or {}
+    except Exception as e:                      # CPU backend, or unsupported
+        print(f"[mem:{tag}] memory_stats unavailable: {e}", flush=True)
+        return
+    rec = {
+        'tag': tag,
+        'in_use': s.get('bytes_in_use', 0) / _GiB,
+        # bytes currently handed out by the BFC allocator and not yet freed
+        # i.e. your live JAX arrays at the moment you call memory_stats().
+        'peak': s.get('peak_bytes_in_use', 0) / _GiB, 
+        'pool': s.get('pool_bytes', 0) / _GiB,
+        'largest': s.get('largest_alloc_size', 0) / _GiB,
+        'num_allocs': s.get('num_allocs', 0),
+    }
+    _HISTORY.append(rec)
+    print(
+        f"[mem:{tag:>16}] in_use={rec['in_use']:7.3f} GiB  "
+        f"peak={rec['peak']:7.3f} GiB  pool={rec['pool']:7.3f} GiB  "
+        f"largest={rec['largest']:7.3f} GiB  n_alloc={rec['num_allocs']}",
+        flush=True,
+    )
 
 
 def mem_summary():
     print('mem summary')
-    # if not _HISTORY:
-    #     return
-    # print("\n===== JAX memory summary =====", flush=True)
-    # print(f"{'stage':>18}  {'in_use(GiB)':>11}  {'peak(GiB)':>10}", flush=True)
-    # for r in _HISTORY:
-    #     print(f"{r['tag']:>18}  {r['in_use']:11.3f}  {r['peak']:10.3f}", flush=True)
-    # print(f"\nJAX peak_bytes_in_use = {_HISTORY[-1]['peak']:.3f} GiB", flush=True)
-    # print("Compare against the max of mem_<jobid>.csv; the difference is "
-    #       "non-JAX memory (cuDSS workspace, PETSc, CUDA context).", flush=True)
+    if not _HISTORY:
+        return
+    print("\n===== JAX memory summary =====", flush=True)
+    print(f"{'stage':>18}  {'in_use(GiB)':>11}  {'peak(GiB)':>10}", flush=True)
+    for r in _HISTORY:
+        print(f"{r['tag']:>18}  {r['in_use']:11.3f}  {r['peak']:10.3f}", flush=True)
+    print(f"\nJAX peak_bytes_in_use = {_HISTORY[-1]['peak']:.3f} GiB", flush=True)
+    print("Compare against the max of mem_<jobid>.csv; the difference is "
+          "non-JAX memory (cuDSS workspace, PETSc, CUDA context).", flush=True)
     
 mem('*******     start')
 
@@ -142,7 +142,7 @@ qs_bound = 5e-5 # Helios boozer error is between 2.1e-3 and 5.8e-3
 iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
 optimizer_name = "proximal-lsq-auglag"
-jac_chunk_size = 32 
+jac_chunk_size = 32
 bs_chunk_size = 32
 
 # ----- Quadcoil Resolution -----
@@ -226,7 +226,7 @@ def quasi_single_stage(
     iota_weight=0.0,
     qs_weight=1.0,
     maxiter=500,  # Maximum iteration per Fourier continuation
-    step=4,
+    step=2,
     max_k=None,  # Maximum continuation boundary mode number
     printout=False,  # Whether to run dummy optimization even when data exists for printout.
     switch_k=7,
@@ -304,7 +304,7 @@ def quasi_single_stage(
             ),
             qs_objective,
         ]
-        if objective_mode == "free" and k >= switch_k:
+        if objective_mode == "free":
             quadcoil_fbe = QuadcoilFreeBoundaryError(
                 eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs_obj,
@@ -312,12 +312,13 @@ def quasi_single_stage(
                 vacuum=vacuum,
                 normalize=True, # This combination: target in normalized
                 normalize_target=False,
-                weight=quadcoil_weight_eff,
+                weight=quadcoil_weight/100 if k <= switch_k else quadcoil_weight,
                 bs_chunk_size=bs_chunk_size,
+                jac_chunk_size=jac_chunk_size,
             )
             quadcoil_fbe.build()
             objective = ObjectiveFunction(obj_list_base + [quadcoil_fbe]) #, deriv_mode="batched", jac_chunk_size=1)
-        elif objective_mode == "fixed" and k >= switch_k:
+        elif objective_mode == "fixed":
             quadcoil_fbe = QuadcoilProxy(
                 eq=eq_k,
                 quadcoil_kwargs=quadcoil_kwargs_obj,
@@ -325,7 +326,7 @@ def quasi_single_stage(
                 vacuum=vacuum,
                 metric_name=('f_B',),
                 metric_target=np.array([0.,]),
-                metric_weight=np.array([quadcoil_weight_eff/f_B_nescoil,]),
+                metric_weight=np.array([(quadcoil_weight/100 if k <= switch_k else quadcoil_weight)/f_B_nescoil,]),
                 normalize=False,
                 normalize_target=False,
                 eq_fixed=False,  # Whether the equilibrium are fixed

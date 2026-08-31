@@ -2,6 +2,7 @@ from shared import *
 
 
 # ## Optimization
+print('OPTIMIZING FOR FBE')
 
 quadcoil_weight = 250. # 5. # 50. -> 90% improvement, 10x degradation in QS
 qs_weight = 500. # 5000.

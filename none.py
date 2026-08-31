@@ -2,6 +2,7 @@ from shared import *
 
 
 # ## Optimization
+print('OPTIMIZING FOR QS ONLY')
 
 quadcoil_weight = 10. # 5. # 50. -> 90% improvement, 10x degradation in QS
 qs_weight = 500. # 5000.

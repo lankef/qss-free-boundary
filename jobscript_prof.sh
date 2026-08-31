@@ -70,7 +70,7 @@ SMI_PID=$!
 # Make sure the sampler dies with the job, however the job ends.
 trap 'kill $SMI_PID 2>/dev/null' EXIT
 
-python -u ./free_prof.py # "$REMAT_INT"
+python -u ./free.py # "$REMAT_INT"
 RC=$?
 
 sleep 1
