@@ -1,0 +1,196 @@
+Job ID:         16679784
+CPUs per task:  4
+Output dir:     /scratch/lf2869/project/qss-free-boundary/chunking_test/out_16679784
+Start time:     Mon Aug 31 16:32:42 EDT 2026
+name, memory.total [MiB]
+NVIDIA L40S, 46068 MiB
+==========================================================================
+jac_chunk_size check   mpol=4 ntor=4 grid=8x8 maxiter=200
+chunks=[1, 5, 8, 20, 40] regs=[0.0, 1e-14]
+quadcoil tests: /scratch/lf2869/code/quadcoil/tests
+output:         /scratch/lf2869/project/qss-free-boundary/chunking_test/out_16679784
+==========================================================================
+
+$ intrace
+jax 0.6.2  device gpu:NVIDIA L40S
+
+[in-trace] unreg  (one compile, one shared V)
+[gl001.hpc.nyu.edu:2476470] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+2026-08-31 16:37:57.590519: E external/xla/xla/service/slow_operation_alarm.cc:73] 
+********************************
+[Compiling module jit__quadcoil_pure] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+2026-08-31 16:38:32.839431: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 2m35.249153934s
+
+********************************
+[Compiling module jit__quadcoil_pure] Very slow compile? If you want to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+********************************
+  n_metric_rows 40   H 40
+  cond(H) 9.3975e+07   lstsq rel residual 4.1929e-09
+  max|J_x| 2.5827e+15  max|J_y| 0.0000e+00  max|V| 1.7792e+22  max|rows| 4.7713e+23
+  chunk    1   max abs diff 2.8593e+18   rel-to-max 5.9928e-06
+  chunk    5   max abs diff 1.9462e+09   rel-to-max 4.0789e-15
+  chunk    8   max abs diff 1.9462e+09   rel-to-max 4.0789e-15
+  chunk   20   max abs diff 1.9462e+09   rel-to-max 4.0789e-15
+  chunk   40   max abs diff 1.6777e+07   rel-to-max 3.5163e-17
+
+[in-trace] reg1e-14  (one compile, one shared V)
+  n_metric_rows 40   H 40
+  cond(H) 1.3797e+08   lstsq rel residual 6.2783e-15
+  max|J_x| 2.5827e+15  max|J_y| 0.0000e+00  max|V| 5.1662e+09  max|rows| 1.6617e+19
+  chunk    1   max abs diff 4.6270e+05   rel-to-max 2.7844e-14
+  chunk    5   max abs diff 2.9373e-04   rel-to-max 1.7676e-23
+  chunk    8   max abs diff 2.9373e-04   rel-to-max 1.7676e-23
+  chunk   20   max abs diff 2.9373e-04   rel-to-max 1.7676e-23
+  chunk   40   max abs diff 9.5367e-07   rel-to-max 5.7390e-26
+
+$ single 1 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2510375] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=1 reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 1.863530e+11
+    df_dnet_toroidal_current_amperes         max|g| = 2.535859e+12
+    df_dplasma_coil_distance                 max|g| = 4.046179e+21
+    df_dplasma_dofs                          max|g| = 4.771260e+23
+
+$ single 5 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2523184] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=5 reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 2.692351e+11
+    df_dnet_toroidal_current_amperes         max|g| = 7.980744e+11
+    df_dplasma_coil_distance                 max|g| = 1.376131e+22
+    df_dplasma_dofs                          max|g| = 3.001233e+23
+
+$ single 8 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2529415] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=8 reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 2.692351e+11
+    df_dnet_toroidal_current_amperes         max|g| = 7.980744e+11
+    df_dplasma_coil_distance                 max|g| = 1.376131e+22
+    df_dplasma_dofs                          max|g| = 3.001233e+23
+
+$ single 20 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2533902] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=20 reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 2.692351e+11
+    df_dnet_toroidal_current_amperes         max|g| = 7.980744e+11
+    df_dplasma_coil_distance                 max|g| = 1.376131e+22
+    df_dplasma_dofs                          max|g| = 3.001233e+23
+
+$ single 40 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2535753] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=40 reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 2.692351e+11
+    df_dnet_toroidal_current_amperes         max|g| = 7.980744e+11
+    df_dplasma_coil_distance                 max|g| = 1.376131e+22
+    df_dplasma_dofs                          max|g| = 3.001233e+23
+
+$ single none 0.0
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2536625] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=None reg=0  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 2.692351e+11
+    df_dnet_toroidal_current_amperes         max|g| = 7.980744e+11
+    df_dplasma_coil_distance                 max|g| = 1.376131e+22
+    df_dplasma_dofs                          max|g| = 3.001233e+23
+
+$ single 1 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2540405] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=1 reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 6.507505e-02
+    df_dnet_toroidal_current_amperes         max|g| = 1.927582e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.521648e+09
+    df_dplasma_dofs                          max|g| = 4.949608e+10
+
+$ single 5 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2554688] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=5 reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 5.744916e-02
+    df_dnet_toroidal_current_amperes         max|g| = 2.072786e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.519959e+09
+    df_dplasma_dofs                          max|g| = 4.950458e+10
+
+$ single 8 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2559863] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=8 reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 5.744916e-02
+    df_dnet_toroidal_current_amperes         max|g| = 2.072786e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.519959e+09
+    df_dplasma_dofs                          max|g| = 4.950458e+10
+
+$ single 20 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2564030] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=20 reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 5.744916e-02
+    df_dnet_toroidal_current_amperes         max|g| = 2.072786e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.519959e+09
+    df_dplasma_dofs                          max|g| = 4.950458e+10
+
+$ single 40 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2567346] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=40 reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 5.744916e-02
+    df_dnet_toroidal_current_amperes         max|g| = 2.072786e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.519959e+09
+    df_dplasma_dofs                          max|g| = 4.950458e+10
+
+$ single none 1e-14
+jax 0.6.2  device gpu:NVIDIA L40S
+[gl001.hpc.nyu.edu:2568571] pmix_mca_base_component_repository_open: unable to open /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so: File /scratch/lf2869/conda_envs/desc/lib/pmix/pmix_mca_pcompress_zlib.so.sl not found (ignored)
+chunk=None reg=1e-14  n_rows=40  peak=0.256 GiB
+    df_dnet_poloidal_current_amperes         max|g| = 5.744916e-02
+    df_dnet_toroidal_current_amperes         max|g| = 2.072786e-01
+    df_dobjective_weight                     max|g| = 1.661737e+19
+    df_dplasma_coil_distance                 max|g| = 2.519959e+09
+    df_dplasma_dofs                          max|g| = 4.950458e+10
+
+[compare] unreg: chunked vs unchunked, end to end
+  rel_to_max  = max|a-b| / max|a|, per gradient leaf
+  elem_rel    = worst |a-b|/|a| over entries above 1e-8 of the leaf max
+  n_fail      = entries failing allclose(rtol=1e-7, atol=0)
+   chunk  phi bitwise   rel_to_max     elem_rel   n_fail    n_tot  peak GiB
+       1         True    3.676e+00    5.808e+03     7600     7600     0.256
+       5         True    1.676e-15    1.378e-12        0     7600     0.256
+       8         True    1.829e-15    1.378e-12        0     7600     0.256
+      20         True    1.981e-15    1.378e-12        0     7600     0.256
+      40         True    0.000e+00    0.000e+00        0     7600     0.256
+    None         True    0.000e+00    0.000e+00        0     7600     0.256
+
+[compare] reg1e-14: chunked vs unchunked, end to end
+  rel_to_max  = max|a-b| / max|a|, per gradient leaf
+  elem_rel    = worst |a-b|/|a| over entries above 1e-8 of the leaf max
+  n_fail      = entries failing allclose(rtol=1e-7, atol=0)
+   chunk  phi bitwise   rel_to_max     elem_rel   n_fail    n_tot  peak GiB
+       1         True    4.498e-01    7.072e+01     7640     7680     0.256
+       5         True    1.171e-15    1.053e-11        0     7680     0.256
+       8         True    1.561e-15    1.053e-11        0     7680     0.256
+      20         True    1.171e-15    1.053e-11        0     7680     0.256
+      40         True    0.000e+00    0.000e+00        0     7680     0.256
+    None         True    0.000e+00    0.000e+00        0     7680     0.256
+
+Reading the table: rel_to_max is the honest accuracy cost of chunking.
+elem_rel is dominated by noise-floor entries and will look alarming even
+when nothing is wrong. phi bitwise=True confirms the forward solve is
+untouched, so any difference is in the adjoint alone.
+----- device memory (external sampler) -----
+samples:        10225
+baseline used:  0.000 GiB
+PEAK used:      1.769 GiB   at 2026/08/31 16:47:06.969
+final used:     0.000 GiB
+device total:   44.988 GiB
+Exit code:      0
+End time:       Mon Aug 31 17:06:53 EDT 2026
