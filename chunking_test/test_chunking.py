@@ -56,7 +56,7 @@ import numpy as np
 # --------------------------------------------------------------------------
 HERE = os.path.dirname(os.path.abspath(__file__))
 QUADCOIL_TESTS = os.environ.get(
-    'QUADCOIL_TESTS', '/home/lf2869/Documents/Codes/quadcoil/tests'
+    'QUADCOIL_TESTS', '/scratch/lf2869/code/quadcoil/tests'
 )
 OUTDIR = os.environ.get('OUTDIR', os.path.join(HERE, 'out'))
 
