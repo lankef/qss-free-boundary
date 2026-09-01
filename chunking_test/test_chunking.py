@@ -11,10 +11,12 @@ Three things get measured:
 
 1. ``intrace`` -- the decisive isolation. Inside a single compiled trace,
    sharing one adjoint matrix ``V``, the monolithic ``vmap`` is compared
-   against the chunked loop. Nothing but the chunk boundaries can differ,
-   so any disagreement here is chunking and chunking alone. Conditioning
-   of the adjoint solve is reported alongside, since that is what sets the
-   amplification factor.
+   against a Python loop of ``vmap`` calls (production) and against
+   ``lax.map(batch_size=...)``. The loop is what production uses;
+   ``lax.map`` is included as a diagnostic because multi-iteration scan
+   over this VJP is incorrect when fused into the outer QUADCOIL JIT
+   (``n_batches > 1``). Conditioning of the adjoint solve is reported
+   alongside, since that is what sets the amplification factor.
 
 2. ``single`` -- one end-to-end ``quadcoil`` call at a given chunk size,
    saving the derivatives and the peak device memory. Each of these runs in
@@ -141,7 +143,7 @@ def run_intrace():
     """Compare chunked vs monolithic vmap inside one trace, sharing one V."""
     import jax
     import jax.numpy as jnp
-    from jax import debug, jacrev, vjp, vmap
+    from jax import debug, jacrev, lax, vjp, vmap
     import quadcoil.quadcoil  # noqa: F401  (populate sys.modules)
     from quadcoil import quadcoil
 
@@ -187,13 +189,27 @@ def run_intrace():
 
         scale = jnp.max(jnp.abs(rows_full))
         for c in [c for c in CHUNKS if c < n] + [n]:
-            rows_c = jnp.concatenate(
+            rows_loop = jnp.concatenate(
                 [vmap(f)(V[i:i + c]) for i in range(0, n, c)], axis=0
             )
-            d = jnp.abs(rows_full - rows_c)
+            rows_map = lax.map(f, V, batch_size=c)
+            d_loop = jnp.abs(rows_full - rows_loop)
+            d_map = jnp.abs(rows_full - rows_map)
+            d_lm = jnp.abs(rows_loop - rows_map)
             debug.print(
-                '  chunk {c:>4}   max abs diff {a:.4e}   rel-to-max {b:.4e}',
-                c=c, a=jnp.max(d), b=jnp.max(d) / scale,
+                '  chunk {c:>4}   loop vs full  max abs {a:.4e}  '
+                'rel-to-max {b:.4e}',
+                c=c, a=jnp.max(d_loop), b=jnp.max(d_loop) / scale,
+            )
+            debug.print(
+                '  chunk {c:>4}   map  vs full  max abs {a:.4e}  '
+                'rel-to-max {b:.4e}',
+                c=c, a=jnp.max(d_map), b=jnp.max(d_map) / scale,
+            )
+            debug.print(
+                '  chunk {c:>4}   map  vs loop  max abs {a:.4e}  '
+                'rel-to-max {b:.4e}',
+                c=c, a=jnp.max(d_lm), b=jnp.max(d_lm) / scale,
             )
 
         return all_values, J_y - rows_full, {}

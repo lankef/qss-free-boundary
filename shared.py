@@ -143,6 +143,9 @@ iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
 optimizer_name = "proximal-lsq-auglag"
 jac_chunk_size = 32
+# QUADCOIL's adjoint / metric-Jacobian chunking. Independent of DESC's
+# jac_chunk_size above (ForceBalance + objective Jacobian).
+quadcoil_jac_chunk_size = 32
 bs_chunk_size = 32
 
 # ----- Quadcoil Resolution -----
@@ -210,6 +213,7 @@ quadcoil_kwargs = quadcoil_kwargs_basic | {
     "constraint_unit": (B2_self_target,),
     "constraint_value": jnp.array([B2_self_target,]),
     "phi_init_with_nescoil": False,
+    "jac_chunk_size": quadcoil_jac_chunk_size,
 }
 
 mem('*******     nescoil')
