@@ -1,0 +1,37 @@
+/scratch/lf2869/code/DESC/desc/__init__.py:94: FutureWarning: The pynvml package is deprecated. Please install nvidia-ml-py instead. If you did not install pynvml directly, please report this to the maintainers of the package that installed pynvml for you.
+  from pynvml import (
+2026-09-02 16:28:47.811401: E external/xla/xla/python/profiler/internal/python_hooks.cc:412] Can't import tensorflow.python.profiler.trace
+2026-09-02 16:29:55.778775: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 1s:
+
+  %reduce.14 = s64[2113]{0} reduce(%constant.418, %constant.274), dimensions={1}, to_apply=%scalar_add_computation, metadata={op_name="jit(compute_scalar)/jit(main)/jit(compute_scaled_error)/dot_general" source_file="/scratch/lf2869/code/DESC/desc/compute/_omnigenity.py" source_line=125}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-09-02 16:29:57.038584: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 2.259923105s
+Constant folding an instruction is taking > 1s:
+
+  %reduce.14 = s64[2113]{0} reduce(%constant.418, %constant.274), dimensions={1}, to_apply=%scalar_add_computation, metadata={op_name="jit(compute_scalar)/jit(main)/jit(compute_scaled_error)/dot_general" source_file="/scratch/lf2869/code/DESC/desc/compute/_omnigenity.py" source_line=125}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-09-02 16:29:59.232231: E external/xla/xla/service/slow_operation_alarm.cc:73] Constant folding an instruction is taking > 2s:
+
+  %reduce.15 = s64[2113]{0} reduce(%constant.426, %constant.275), dimensions={1}, to_apply=%scalar_add_computation, metadata={op_name="jit(compute_scalar)/jit(main)/jit(compute_scaled_error)/dot_general" source_file="/scratch/lf2869/code/DESC/desc/compute/_omnigenity.py" source_line=122}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+2026-09-02 16:29:59.480587: E external/xla/xla/service/slow_operation_alarm.cc:140] The operation took 2.248451612s
+Constant folding an instruction is taking > 2s:
+
+  %reduce.15 = s64[2113]{0} reduce(%constant.426, %constant.275), dimensions={1}, to_apply=%scalar_add_computation, metadata={op_name="jit(compute_scalar)/jit(main)/jit(compute_scaled_error)/dot_general" source_file="/scratch/lf2869/code/DESC/desc/compute/_omnigenity.py" source_line=122}
+
+This isn't necessarily a bug; constant-folding is inherently a trade-off between compilation time and speed at runtime. XLA has some guards that attempt to keep constant folding from taking too long, but fundamentally you'll always be able to come up with an input program that takes a long time.
+
+If you'd like to file a bug, run with envvar XLA_FLAGS=--xla_dump_to=/tmp/foo and attach the results.
+E0902 16:47:51.003153 1528039 pjrt_stream_executor_client.cc:2916] Execution of replica 0 failed: INTERNAL: CUDA error: Failed to launch CUDA kernel: loop_add_fusion_30; block dims: 128x1x1; grid dims: 147x1x1; shared memory size: 0: CUDA_ERROR_LAUNCH_FAILED: unspecified launch failure
+2026-09-02 16:47:51.623211: E external/xla/xla/python/profiler/internal/python_hooks.cc:412] Can't import tensorflow.python.profiler.trace
+[libprotobuf ERROR external/com_google_protobuf/src/google/protobuf/message_lite.cc:449] tensorflow.profiler.XSpace exceeded maximum protobuf size of 2GB: 4038429274
+[2026-09-02T18:30:02.743] error: *** JOB 16805595 ON gl006 CANCELLED AT 2026-09-02T18:30:02 DUE to SIGNAL Terminated ***

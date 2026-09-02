@@ -1,0 +1,56 @@
+Job ID:         16805595
+Nodes:          1
+CPUs per task:  4
+Start time:     Wed Sep  2 16:27:43 EDT 2026
+mem
+[mem:*******     start] in_use=  0.000 GiB  peak=  0.000 GiB  pool=  0.002 GiB  largest=  0.000 GiB  n_alloc=98
+Precomputing transforms
+mem
+[mem:*******     nescoil] in_use=  0.000 GiB  peak=  1.494 GiB  pool=  2.002 GiB  largest=  1.482 GiB  n_alloc=1295
+OPTIMIZING FOR FBE
+mem
+[mem:*******     eqfam] in_use=  0.000 GiB  peak=  1.494 GiB  pool=  2.002 GiB  largest=  1.482 GiB  n_alloc=1295
+Boundary mode steps: range(4, 17, 2)
+Precomputing transforms
+Precomputing transforms
+mem
+[mem:*******     objectives and constraints built for k=4] in_use=  0.000 GiB  peak=  1.494 GiB  pool=  2.002 GiB  largest=  1.482 GiB  n_alloc=2918
+
+====================================
+Optimizing boundary modes M,N <= 4
+====================================
+Pre-optimization QS value:   1959.7473289855702
+Pre-optimization FBE value:  9.343166985712455e-09
+mem
+[mem:*******     starting step: 4] in_use=  0.000 GiB  peak=  1.494 GiB  pool=  2.002 GiB  largest=  1.482 GiB  n_alloc=3069
+Building objective: volume
+Precomputing transforms
+Timer: Precomputing transforms = 1.81 sec
+Building objective: rotational transform
+Precomputing transforms
+Timer: Precomputing transforms = 1.47 sec
+Building objective: rotational transform
+Precomputing transforms
+Timer: Precomputing transforms = 102 ms
+Timer: Objective build = 4.52 sec
+Building objective: force
+Precomputing transforms
+Timer: Precomputing transforms = 2.14 sec
+Timer: Objective build = 2.32 sec
+Timer: Objective build = 6.99 ms
+Timer: Eq Update LinearConstraintProjection build = 11.6 sec
+Timer: Proximal projection build = 12.3 min
+Building objective: lcfs R
+Building objective: lcfs Z
+Building objective: fixed Psi
+Building objective: fixed current
+Building objective: fixed pressure
+Timer: Objective build = 1.86 sec
+Timer: LinearConstraintProjection build = 3.93 sec
+Number of parameters: 80
+Number of objectives: 10533
+Timer: Initializing the optimization = 12.4 min
+
+Starting optimization
+Using method: proximal-lsq-auglag
+Open URL in browser: https://ui.perfetto.dev/#!/?url=http://127.0.0.1:9001/perfetto_trace.json.gz

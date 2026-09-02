@@ -145,7 +145,7 @@ optimizer_name = "proximal-lsq-auglag"
 jac_chunk_size = 32
 # QUADCOIL's adjoint / metric-Jacobian chunking. Independent of DESC's
 # jac_chunk_size above (ForceBalance + objective Jacobian).
-quadcoil_jac_chunk_size = 32
+quadcoil_jac_chunk_size = 16
 bs_chunk_size = 32
 
 # ----- Quadcoil Resolution -----
