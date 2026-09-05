@@ -38,8 +38,8 @@ fi
 
 export PETSC_OPTIONS="-no_signal_handler"
 export PYTHONFAULTHANDLER=1
-export XLA_PYTHON_CLIENT_PREALLOCATE=false
-export XLA_PYTHON_CLIENT_MEM_FRACTION=0.9
+# export XLA_PYTHON_CLIENT_PREALLOCATE=false
+# export XLA_PYTHON_CLIENT_MEM_FRACTION=0.9
 # NOTE: do NOT set JAX_PLATFORMS. coil_fem/magnetic.py repairs simsopt's
 # jax_platform_name='cpu' pin only when JAX_PLATFORMS is unset.
 
@@ -51,7 +51,7 @@ if [[ "${NSYS_NO_GRAPHS:-1}" == "1" ]]; then
 fi
 
 NSYS_DELAY="${NSYS_DELAY:-900}"
-NSYS_DURATION="${NSYS_DURATION:-480}"
+NSYS_DURATION="${NSYS_DURATION:-7200}"
 REPORT="nsys/free_${SLURM_JOB_ID}"
 
 echo "Job ID:         $SLURM_JOB_ID"

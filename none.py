@@ -22,5 +22,7 @@ eqfam_f_max_phi, out_list_f_max_phi, quadcoil_objective_f_max_phi = quasi_single
     qs_weight=qs_weight,
     vol_weight=vol_weight,
     iota_weight=iota_weight,
-    printout=True
+    printout=True,
+    maxiter=5,
+    step=16,
 )

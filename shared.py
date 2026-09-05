@@ -142,16 +142,16 @@ qs_bound = 5e-5 # Helios boozer error is between 2.1e-3 and 5.8e-3
 iota_l, iota_u = 0.1, 0.4 # helios is 0.15
 vol_l, vol_u = 450, 550 # Helios is 493
 optimizer_name = "proximal-lsq-auglag"
-jac_chunk_size = 32
+jac_chunk_size = 64
 # QUADCOIL's adjoint / metric-Jacobian chunking. Independent of DESC's
 # jac_chunk_size above (ForceBalance + objective Jacobian).
 quadcoil_jac_chunk_size = 16
-bs_chunk_size = 32
+bs_chunk_size = 64
 
 # ----- Quadcoil Resolution -----
 
-mpol = 10  # Num. poloidal modes for the current potential
-ntor = 10  # Num. toroidal modes for the current potential
+mpol = 8  # Num. poloidal modes for the current potential
+ntor = 8  # Num. toroidal modes for the current potential
 # Resolution for sampling objectives
 quadpoints_phi = jnp.linspace(0, 1 / eq_init.NFP, 32, endpoint=False)
 quadpoints_theta = jnp.linspace(0, 1, 32, endpoint=False)
